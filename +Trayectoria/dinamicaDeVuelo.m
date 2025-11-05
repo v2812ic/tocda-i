@@ -10,3 +10,5 @@
 %               - dx/dt = V*cos(gamma)
 %               - dh/dt = V*sin(gamma)
 %               - dm/dt = -m_dot (consumo de combustible)
+
+% El dm/dt se obtiene de Avion.calculaMotor pasándole el empuje
