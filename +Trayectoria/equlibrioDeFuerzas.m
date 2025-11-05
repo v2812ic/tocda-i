@@ -1,5 +1,4 @@
 % Inputs:
-%   vars        (vector 2x1) Variables a resolver [alpha; T]
 %   V           (scalar) Velocidad actual (m/s)
 %   h           (scalar) Altitud actual (m)
 %   W           (scalar) Peso actual (N)
@@ -8,6 +7,14 @@
 %   rho         (scalar) Densidad del aire actual (kg/m^3)
 %
 % Outputs:
-%   F           (vector 2x1) Residuos de las ecuaciones 
-%               - F(1) = L - W*cos(gamma) + T*sin(alpha)
-%               - F(2) = Tcos(alpha) - D - W*sin(gamma)
+%  -  angulo de ataque correspondiente alpha
+%  -  empuje del motor correspondiente.
+
+
+%        Ecuaciones:
+%                0 = L - W*cos(gamma) + T*sin(alpha)
+%                0 = Tcos(alpha) - D - W*sin(gamma)
+
+% Estas ecuaciones hay que resolverlas numéricamente ya que L y D son
+% funciones de alpha. Estos L y D en función de alpha se sacan de
+% Avion.calcularAero

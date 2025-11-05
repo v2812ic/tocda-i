@@ -4,3 +4,4 @@
 %
 % Outputs:
 %   obj         (objeto) La instancia de la clase 'Avion' con todas las
+%   funciones y datos cargados
