@@ -6,6 +6,7 @@
 %   fuel_inicial (scalar)    Masa de combustible inicial (kg)
 %   fixedParams  (struct)     Ver Core.evaluarVuelo
 %   avionObj     (objeto)     Objeto de la clase 'Avion'
+%   handles de funciones
 %
 % Outputs:
 %   resultados   (struct) Estructura con los resultados de la simulación.
@@ -13,5 +14,6 @@
 %               - .combustibleConsumido (kg)
 %               - .combustibleRestante (kg)
 %               - .distanciaTotalRecorrida (m)
-%               - .violacionRestricciones (scalar) Penalización si fsolve falla
+%               - .violacionRestricciones (scalar) Penalización si fsolve
+%               falla (flag de error)
 %

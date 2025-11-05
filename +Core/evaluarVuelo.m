@@ -1,3 +1,5 @@
+% Función del optimizador
+% 
 % Inputs:
 %   X           (vector 1x12) Vector de variables de decisión del optimizador
 %               - X(1:4): Distancias de las fases [dist1, dist2, dist3, dist4] (m)
