@@ -6,3 +6,12 @@
 %
 % Outputs:
 %   m_dot       (scalar) Flujo de combustible (kg/s)
+
+function dmdt = calcularMotor(avion)
+
+% a partir del estado del avion calcular el consumo instantáneo de
+% combustible
+
+dmdt = pi;
+
+end
