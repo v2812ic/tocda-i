@@ -12,3 +12,18 @@
 % habrá que configurarlo para que se llamen a los distintos tipos de
 % algoritmos que hayan. De todas formas, al algoritmo solo le interesa el
 % problema de optimización que es el que se ha de construir en evaluarVuelo
+
+clc;
+clear;
+
+aviones = ["a320", "b737", "b757"]; % etc
+datosGenerales = load("Data/restriccionesGenerales.mat");
+
+for i = 1:length(aviones)
+    avionActual = aviones(i);
+    
+    % Inicialización del objeto del avión
+    Avion = Avion(avionActual);
+
+    % Llamar al optimizador
+end

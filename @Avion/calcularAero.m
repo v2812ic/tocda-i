@@ -8,3 +8,12 @@
 % Outputs:
 %   L           (scalar) Fuerza de sustentación (N)
 %   D           (scalar) Fuerza de resistencia (N)
+
+function [L, D] = calcularAero(avion, alpha)
+
+L = pi;
+cL = pi;
+
+% distinguir entre fases según el estado
+D = avion.cd0 + avion.k*(cL^2);
+end
