@@ -9,7 +9,11 @@
 %   L           (scalar) Fuerza de sustentación (N)
 %   D           (scalar) Fuerza de resistencia (N)
 
-function [L, D] = calcularAero(avion, alpha)
+function [L, D, T] = calcularAeroyFuerzas(avion)
+
+% ME ESTOY RAYANDO CON CÓMO IMPLEMENTAR EL CÁLCULO DE alpha. Revisar que
+% creo que está mal configurada esta función con respecto a lo que se
+% declara en la clase
 
 L = pi;
 cL = pi;
