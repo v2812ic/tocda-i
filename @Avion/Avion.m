@@ -57,8 +57,6 @@ classdef Avion < handle
                 error("Revisa que los campos de datos en el avión " + nombreavion + " estén todos y que su nombre sea consistente.")
             end        
         end
-
-
         T = calcularAeroyFuerzas(avion);
         dm = calcularMotor(avion, estado);
     end
