@@ -6,6 +6,9 @@
 %   obj         (objeto) La instancia de la clase 'Avion' con todas las
 %   funciones y datos cargados
 
+% Ademas avion va a guardar las variables instantaneas que vamos a coger
+% para el estado de la EDO
+
 classdef Avion < handle
     properties
 
@@ -17,7 +20,13 @@ classdef Avion < handle
 
         % Parámetros de motor
 
-        % Otros parámetros
+        % Parámetros de estado y derivadas
+        estado % encapsula x, h, m
+        dEstado
+        T 
+        % L y D solo son necesarios para equilibrar las ecuaciones de
+        % fuerzas, T es necesario guardarlo para pasarselo a la dinámica
+        % del vuelo y que calculamotor lo use para sacar el consumo
 
         nombreAvion
 
@@ -48,9 +57,7 @@ classdef Avion < handle
                 error("Revisa que los campos de datos en el avión " + nombreavion + " estén todos y que su nombre sea consistente.")
             end        
         end
-
-
-        [L, D] = calcularAero(avion, alpha);
-        dmdt = calcularMotor(avion, estado);
+        T = calcularAeroyFuerzas(avion);
+        dm = calcularMotor(avion, estado);
     end
 end
