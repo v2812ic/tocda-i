@@ -17,6 +17,8 @@ gradiente = true;
 w1 = 0.5; % 50% importancia al tiempo
 w2 = 0.5; % 50% importancia al consumo
 
+nvars = 12;
+
 %% 1. Carga de datos del problema
 
 % Construye el controlador de opciones de la simulación
@@ -25,6 +27,7 @@ control.heuristico = heuristico;
 control.gradiente = gradiente;
 control.w1 = w1;
 control.w2 = w2;
+control.nvars = nvars;
 
 % Carga las restricciones generales (distancias de aeropuertos) y las
 % fronteras de las restricciones (máximos y mínimos)
@@ -38,86 +41,20 @@ for i = 1:length(aviones)
     
     % Inicialización del objeto del avión y de las variables de decisión
     Avion = Avion(avionActual);
-    nvars = 12;
-    
-    % Creación de Funciones para el problema de optimización
-    masterEval = @(X) cachedEvaluarVuelo(X, fixedParams, Avion);
-    objFcn = @(X) wrapper_getObjetivos(X, masterEval);
-    conFcn = @(X) wrapper_getRestricciones(X, masterEval);
-    
 
     %% 2.1. Algoritmo heuristico
 
     if control.heuristico
-        options_ga = optimoptions('gamultiobj', ...
-            'Display', 'iter', ...
-            'PlotFcn', @gaplotpareto, ...
-            'PopulationSize', 60, ...
-            'UseParallel', true);
-        
-        [X_ga, F_ga, exitflag_ga, output_ga] = gamultiobj(objFcn, nvars, ...
-            [], [], [], [], lb, ub, conFcn, options_ga);
-        
-        Resultados.(avionActual).ga.X = X_ga;
-        Resultados.(avionActual).ga.F = F_ga;
-        Resultados.(avionActual).ga.output = output_ga;
-        disp('Optimización GA completada.');
+
     end
     
     %% 2.2. Algoritmo de gradiente
+    if control.gradiente
 
-    fminconObj = @(X) wrapper_weightedSum(X, masterEval, control.w1, control.w2);
-    
-    options_fmc = optimoptions('fmincon', ...
-        'Algorithm', 'sqp', ...
-        'Display', 'iter', ...
-        'UseParallel', true);
-    
-    x0 = (lb + ub) / 2; % Punto de inicio
-    
-    [X_fmc, F_fmc, exitflag_fmc, output_fmc] = fmincon(fminconObj, x0, ...
-        [], [], [], [], lb, ub, conFcn, options_fmc);
-    
-    Resultados.(avionActual).fmc.X = X_fmc;
-    Resultados.(avionActual).fmc.F_scalar = F_fmc;
-    Resultados.(avionActual).fmc.output = output_fmc;
-    disp('Optimización fmincon completada.');
+    end
 end
     
 
-%% 5. GUARDADO DE RESULTADOS
+%% 3. GUARDADO DE RESULTADOS
 save(['Resultados/Resultados_' datetime("now",'yyyymmdd_HHMM') '.mat'], 'Resultados');
 
-
-%% --- FUNCIONES WRAPPER Y CACHÉ (AL FINAL DEL SCRIPT) ---
-
-function [objetivos, c, ceq, X_cached] = cachedEvaluarVuelo(X, fixedParams, avionObj)
-    persistent lastX results
-    
-    if ~isequal(X, lastX)
-        [obj, c_sim, ceq_sim] = evaluarVuelo(X, fixedParams, avionObj);
-        
-        results.objetivos = obj;
-        results.c = c_sim;
-        results.ceq = ceq_sim;
-        lastX = X;
-    end
-    
-    objetivos = results.objetivos;
-    c = results.c;
-    ceq = results.ceq;
-    X_cached = lastX;
-end
-
-function [objetivos] = wrapper_getObjetivos(X, masterEvalHandle)
-    [objetivos, ~, ~] = masterEvalHandle(X);
-end
-
-function [c, ceq] = wrapper_getRestricciones(X, masterEvalHandle)
-    [~, c, ceq] = masterEvalHandle(X);
-end
-
-function [obj_scalar] = wrapper_weightedSum(X, masterEvalHandle, w1, w2)
-    [objetivos, ~, ~] = masterEvalHandle(X);
-    obj_scalar = w1 * objetivos(1) + w2 * objetivos(2);
-end
