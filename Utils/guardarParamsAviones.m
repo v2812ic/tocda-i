@@ -2,7 +2,7 @@
 % TODOS LOS PARAMETROS EN SISTEMA INTERNACIONAL 
 
 % NOMBRE DEL AVIÓN 
-nombreAvion = "A319";
+nombreAvion = "B737";
 
 % Parámetros aerodinámicos (adim)
 parametros.cD0Despegue = 1.2;
@@ -26,6 +26,6 @@ fronteras.vMinDespegue = 50;
 fronteras.vMaxAproximacion = 50;
 fronteras.vMinAproximacion = 50;
 
-ruta = fullfile('Data/datos_'+ nombreAvion+ '.mat');
+ruta = strcat("Data/datos_", nombreAvion, ".mat");
 
 save(ruta, 'parametros', 'fronteras');

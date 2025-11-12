@@ -48,13 +48,12 @@ classdef Avion < handle
         function avion = Avion(nombreAvion)
             
             avion.nombreAvion = nombreAvion;
-            rutaData = fullfile(['Data/datos_' nombreAvion '.mat']);
-
+            rutaData = strcat("Data/datos_", nombreAvion, ".mat");
             try
                 dataCargada = load(rutaData);
                 
             catch ME
-                error("No se pueden cargar los datos, revisa la ruta de " + nombreavion + ".")
+                error(strcat("No se pueden cargar los datos, revisa la ruta de " , nombreAvion , "."))
             end
             
             % asignación de variables del avión, si falta alguna o está mal
@@ -64,9 +63,9 @@ classdef Avion < handle
                 fronteras = dataCargada.fronteras;
                 
                 % parametros aerodinamicos
-                avion.cD0Despegue = parametros.cD0_despegue;
-                avion.cD0Crucero = parametros.cD0_crucero;
-                avion.cD0Descenso = parametros.cD0_descenso;
+                avion.cD0Despegue = parametros.cD0Despegue;
+                avion.cD0Crucero = parametros.cD0Crucero;
+                avion.cD0Descenso = parametros.cD0Descenso;
                 avion.k = parametros.k;
 
                 % parametros del motor
@@ -78,7 +77,7 @@ classdef Avion < handle
                 % restricciones de vuelo
                 avion.FWmax = fronteras.FWmax;
                 avion.techoDeVuelo = fronteras.techoDeVuelo;
-                avion.vMaxCrucero = fronteras.vMinCrucero;
+                avion.vMaxCrucero = fronteras.vMaxCrucero;
                 avion.vMinCrucero = fronteras.vMinCrucero;
                 avion.vMaxDespegue = fronteras.vMaxDespegue;
                 avion.vMinDespegue = fronteras.vMinDespegue;
@@ -89,7 +88,7 @@ classdef Avion < handle
                 % las variables de decisión
 
             catch ME
-                error("Revisa que los campos de datos en el avión " + nombreavion + " estén todos y que su nombre sea consistente.")
+                error(strcat("Revisa que los campos de datos en el avión ", nombreAvion, " estén todos y que su nombre sea consistente."))
             end        
         end
         % T = calcularAeroyFuerzas(avion);

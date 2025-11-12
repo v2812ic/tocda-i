@@ -36,3 +36,19 @@
 % Necesita un vector de estado (x, h, m) - distancia,
 % altura, masa y sus derivadas. Para obtener sus derivadas se recurre a las
 % funciones de equilibrio de fuerzas y dinamicaDeVuelo en cada instante. 
+
+function resultados = simularPerfil(distFases, velFases, altitudCruceros, ...
+    fuelInicial, parametrosFijos, Avion)
+
+
+    violacionRestricciones = 0;
+
+    tiempoTotal = distFases(1)^2 + 2;
+
+    combustibleConsumido = fuelInicial + 3;
+    
+    resultados.violacionRestricciones = violacionRestricciones;
+    resultados.combustibleConsumido = combustibleConsumido;
+    resultados.tiempoTotal = tiempoTotal;
+
+end
