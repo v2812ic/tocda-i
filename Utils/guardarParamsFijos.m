@@ -12,18 +12,18 @@ fronteras.minTasaAscenso = 10;
 fronteras.maxTasaDescenso = 100; 
 fronteras.minTasaDescenso = 10; 
 
-fronteras.x1Max = 1e3; % (m)
+fronteras.x1Max = 1e5; % (m)
 fronteras.x2Max = 1e5;
-fronteras.x3Max = 1e6;
-fronteras.x4Max = 1e6;
+fronteras.x3Max = 1e5;
+fronteras.x4Max = 1e5;
 
-fronteras.x1Min = 1e2;
-fronteras.x2Min = 1e2;
-fronteras.x3Min = 1e2;
-fronteras.x4Min = 1e2;
+fronteras.x1Min = 0;
+fronteras.x2Min = 0;
+fronteras.x3Min = 0;
+fronteras.x4Min = 0;
 
-fronteras.x5Max = 1e2;
-fronteras.x5Min = 1e2;
+fronteras.x5Max = 1e5;
+fronteras.x5Min = 1e5;
 
 fronteras.hCruceroMin = 1e4;
 
