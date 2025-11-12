@@ -7,5 +7,30 @@
 %
 % Outputs:
 %   objetivos   (vector 2x1) [TiempoTotal; ConsumoNormalizado]
-%   c           (vector Nx1) Restricciones de DESIGUALDAD (c <= 0)
-%   ceq         (vector Mx1) Restricciones de IGUALDAD (ceq = 0)
+%   c           (vector Nx1) Restricciones de DESIGUALDAD (c <= 0) (no
+%   lineales, no hay)
+%   ceq         (vector Mx1) Restricciones de IGUALDAD (ceq = 0) (no
+%   lineales, solo hay la del combustible)
+
+function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronterasFijas)
+
+distFases = [X(1:4)];
+velFases = [X(5:9)];
+altitudCruceros = [X(10:11)];
+fuelInicial = X(12);
+
+resultados = simularPerfil(distFases, velFases, altitudCruceros, fuelInicial, ...
+    parametrosFijos, Avion);
+
+objetivos = [resultados.tiempoTotal, resultados.combustibleConsumido];
+
+% restricciones de igualdad (que no se rompa la física solamente)
+ceq = resultados.violacionRestricciones;
+
+% restricciones de desigualdad (que llegue a destino sin romper la física y
+% que no gaste todo el combustible)
+c(1) = resultados.combustibleConsumido - parametrosFijos.seguridadFuel * fuelInicial;
+c(2) = -sum(distFases) + parametrosFijos.distancia - fronterasFijas.x5Max;
+c(3) = sum(distFases) - parametrosFijos.distancia + fronterasFijas.x5Min;
+
+end
