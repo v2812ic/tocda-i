@@ -94,6 +94,13 @@ for i = 1:length(aviones)
     %% 2.2. Algoritmo de gradiente
     if control.gradiente
     fprintf("Comienza la optimización por algoritmo gradiente.\n")
+
+        optionsGrad = optimoptions('fmincon');
+
+        Resultados.(avionActual).grad.X = X_ga;
+        Resultados.(avionActual).grad.F = F_ga;
+        Resultados.(avionActual).grad.output = output_ga;
+    
     fprintf("Optimización gradiente completada.\n\n")  
     end
 end
