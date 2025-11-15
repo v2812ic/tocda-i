@@ -12,6 +12,7 @@ function dmdt = calcularMotor(avion)
 % a partir del estado del avion calcular el consumo instantáneo de
 % combustible
 
-dmdt = pi;
+dmdt = FuelFlow_Turbofan(0.8, 11000, 100, opts)
 
 end
+
