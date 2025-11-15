@@ -6,16 +6,21 @@ ThrustReq = 6000; % empuje requerido [N]
 % Cambio de los parámetros del motor 
 % Fmax=> Maximum sea-level static thrust (N)
 % SFC=> Sea-level static TSFC (kg/(N.s))
-% tau=> Fastest engine time cons
-params = struct('Fmax',1.30e5,'SFC',1.10e-4,'tau',0.02,'Nt',0.98, ...
-                'ic_source','Specify','IC',2.4e4);
+% tau=> Fastest engine time constant (s) controla lo rápido que se adapta a
+% cambios de throttle. PONERLO BAJO PARA QUE CONVERJA
+% Nt=> Ratio of installed to unstalled thrust DEJARLO COMO ESTÁ
+% ic_source=> initial thrust source ('Internal' o 'External')
+% IC=> initial thrust (N) (solo aplica si ic_source = 'Eternal')
+
+params = struct('Fmax',1.30e5,'SFC',1.10e-4,'tau',0.0000001,'Nt',0.9, ...
+                'ic_source','External','IC',6000);
 
 apply_engine_params(params);
 
 % Configuración de la simulación
 
 opts.Model     = 'Turbofan_Model';  %Nombre del modelo de Simulink
-opts.StopTime  = '2';   %Tiempo de simulación
+opts.StopTime  = '0.0005';   %Tiempo de simulación
 opts.ThrustSig = 'Thrust_N';    %Nombre de la señal de empuje
 opts.FuelSig   = 'FuelFlow_kgps';   %Nombre de la señal de consumo
 opts.UseRapid  = false;     % Modo rápido
@@ -223,21 +228,65 @@ end
 
 
 function apply_engine_params(p)
-  blk = 'Turbofan_Model/Turbofan Engine System';
-  f = @(name,val) set_param(blk, name, num2str(val));
+    model = 'Turbofan_Model';
 
-  if isfield(p,'Fmax'), f('Fmax', p.Fmax); end
-  if isfield(p,'SFC'),  f('SFC',  p.SFC);  end
-  if isfield(p,'tau'),  f('tau',  p.tau);  end
-  if isfield(p,'Nt'),   f('Nt',   p.Nt);   end
+    % 1) Cargar el modelo si no está cargado
+    if ~bdIsLoaded(model)
+        load_system(model);   % no abre ventana
+    end
 
-  if isfield(p,'ic_source')
-      set_param(blk,'ic_source', p.ic_source);   % 'Internal' o 'Specify'
-  end
-  if isfield(p,'IC')
-      % solo tendrá efecto si ic_source = 'Specify'
-      f('IC', p.IC);
-  end
+    % 2) Intentar encontrar el bloque por distintas claves
+    blk = '';  % ruta completa al bloque dentro del modelo
 
-  save_system(bdroot(blk));
+    % (a) Por referencia a la librería donde vive el bloque
+    hits = find_system(model, 'LookUnderMasks','all', 'FollowLinks','on', ...
+        'ReferenceBlock','aerolibpropulsion2/Turbofan Engine System');
+    if ~isempty(hits); blk = hits{1}; end
+
+    % (b) Si no, por MaskType típico
+    if isempty(blk)
+        hits = find_system(model, 'LookUnderMasks','all', 'FollowLinks','on', ...
+            'MaskType','Turbofan Engine System');
+        if ~isempty(hits); blk = hits{1}; end
+    end
+
+    % (c) Si no, por nombre aproximado del bloque dentro del modelo
+    if isempty(blk)
+        hits = find_system(model, 'LookUnderMasks','all', 'FollowLinks','on', ...
+            'Name','Turbofan Engine System');
+        if ~isempty(hits); blk = hits{1}; end
+    end
+
+    % (d) Último intento: ¿lo llamaste "Turbofan Engine"?
+    if isempty(blk)
+        hits = find_system(model, 'LookUnderMasks','all', 'FollowLinks','on', ...
+            'Name','Turbofan Engine');
+        if ~isempty(hits); blk = hits{1}; end
+    end
+
+    % Si sigue vacío, avisar con info útil
+    if isempty(blk)
+        error(['No encuentro el bloque Turbofan dentro de ', model, ...
+               '. Abre el modelo y dime el nombre exacto del bloque o selecciona el bloque y usa: ', ...
+               'getfullname(gcb)']);
+    end
+
+    % 3) Aplicar parámetros (usa num2str para todos menos enums)
+    f = @(name,val) set_param(blk, name, num2str(val));
+
+    % ic_source solo acepta 'Internal' o 'External' en tu versión
+    if isfield(p,'ic_source')
+        set_param(blk,'ic_source', p.ic_source);   % 'Internal' / 'External'
+    end
+    if isfield(p,'IC');   f('IC',   p.IC);   end     % N
+    if isfield(p,'Fmax'); f('Fmax', p.Fmax); end     % N
+    if isfield(p,'SFC');  f('SFC',  p.SFC);  end     % kg/(N*s) en MKS
+    if isfield(p,'tau');  f('tau',  p.tau);  end     % s
+    if isfield(p,'Nt');   f('Nt',   p.Nt);   end     % ratio
+    if isfield(p,'units')
+        set_param(blk,'units', p.units);            % 'Metric (MKS)' / 'English'
+    end
+
+    save_system(model);
 end
+

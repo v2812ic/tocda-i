@@ -11,6 +11,7 @@ ThrustReq = 6000; % empuje requerido [N]
 % Nt=> Ratio of installed to unstalled thrust DEJARLO COMO ESTÁ
 % ic_source=> initial thrust source ('Internal' o 'External')
 % IC=> initial thrust (N) (solo aplica si ic_source = 'Eternal')
+
 params = struct('Fmax',1.30e5,'SFC',1.10e-4,'tau',0.0000001,'Nt',0.9, ...
                 'ic_source','External','IC',6000);
 
