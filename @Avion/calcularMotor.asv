@@ -1,6 +1,16 @@
-% Definición de condiciones
-Mach = 0.78;
-Alt = 11000;      % metros
+% Inputs:
+%   obj         (objeto) La instancia de la clase 'Avion' (inyectado)
+%   V           (scalar) Velocidad actual (m/s)
+%   h           (scalar) Altitud actual (m)
+%   T           (scalar) empuje deseado
+%
+% Outputs:
+%   m_dot       (scalar) Flujo de combustible (kg/s)
+
+function dmdt = calcularMotor(avion, estado)
+%condiciones de vuelo
+Mach = estado.V;
+Alt = estado.h;      % metros
 ThrustReq = 6000; % empuje requerido [N]
 
 % Cambio de los parámetros del motor 
@@ -12,15 +22,15 @@ ThrustReq = 6000; % empuje requerido [N]
 % ic_source=> initial thrust source ('Internal' o 'External')
 % IC=> initial thrust (N) (solo aplica si ic_source = 'Eternal')
 
-params = struct('Fmax',1.30e5,'SFC',1.10e-4,'tau',0.0000001,'Nt',0.9, ...
-                'ic_source','External','IC',6000);
+params = struct('Fmax',avion.Tsl,'SFC',avion.TSFCsl,'tau',0.0000001,'Nt',0.9, ...
+                'ic_source','External','IC',ThrustReq);
 
 apply_engine_params(params);
 
 % Configuración de la simulación
 
 opts.Model     = 'Turbofan_Model';  %Nombre del modelo de Simulink
-opts.StopTime  = '0.0005';   %Tiempo de simulación
+opts.StopTime  = '0.00005';   %Tiempo de simulación
 opts.ThrustSig = 'Thrust_N';    %Nombre de la señal de empuje
 opts.FuelSig   = 'FuelFlow_kgps';   %Nombre de la señal de consumo
 opts.UseRapid  = false;     % Modo rápido
@@ -31,6 +41,13 @@ opts.TolN      = 1.0;   %Tolerancia en Newtons
 
 fprintf('Throttle = %.3f\nThrust = %.1f N\nFuel flow = %.4f kg/s\n', ...
     throttle, thrustAchieved, fuelFlow);
+dmdt = FuelFlow_Turbofan(0.8, 11000, 100, opts)
+
+end
+
+
+
+% ======= funciones auxiliares =======
 
 function [fuelFlow, throttle, thrustAchieved] = FuelFlow_Turbofan(Mach, Alt, ThrustReq, opts)
 % FuelFlow_Turbofan  Calcula el consumo (kg/s) que cumple un empuje requerido (N)
@@ -119,8 +136,6 @@ if abs(thrustAchieved - ThrustReq) > max(1, opts.TolN)
         thrustAchieved, ThrustReq, abs(thrustAchieved-ThrustReq));
 end
 end
-
-% ======= funciones auxiliares =======
 
 function val = thrust_error(u, Mach, Alt, Treq, opts, simMode)
 [T, ~] = simulate_once(u, Mach, Alt, opts, simMode);
