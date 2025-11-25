@@ -13,7 +13,7 @@ addpath('Utils');
 
 %% 0. Control y setup de simulación
 
-aviones = ["A320", "B757"]; % etc
+aviones = ["A320", "B757", "B737"]; % etc
 heuristico = true; % genetico
 gradiente = false; 
 

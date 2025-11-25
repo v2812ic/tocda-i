@@ -26,7 +26,7 @@ import Trayectoria.simularPerfil
     fuelInicial = X(12);
     
     resultados = simularPerfil(distFases, velFases, altitudCruceros, fuelInicial, ...
-        parametrosFijos, Avion);
+        parametrosFijos, fronterasFijas, Avion);
     
     objetivos = [resultados.tiempoTotal, resultados.combustibleConsumido];
     
