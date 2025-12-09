@@ -38,7 +38,7 @@ else
     rho=0.03639*exp(-0.00015769*(h-11000));
 end
 
-Cl=W*cos(deg2rad(gamma))/((1/2)*rho*v^2*S);
+Cl=W*cos(gamma)/((1/2)*rho*v^2*S);
     
 %Calculamos el Cd
 Cd=k*Cl+cd0;
@@ -49,5 +49,6 @@ empuje=D+W*sin(gamma);
 
 
 %Sumamos a D la componente del peso en el eje horizontal del avión. Importante llamarlo empuje porque es el nombre que hemos dado al principio de la función
-empuje=D+W*sin(deg2rad(gamma));
+empuje=D+W*sin(gamma);
+
 
