@@ -48,7 +48,4 @@ D=(1/2)*rho*v^2*S*Cd;
 empuje=D+W*sin(gamma);
 
 
-%Sumamos a D la componente del peso en el eje horizontal del avión. Importante llamarlo empuje porque es el nombre que hemos dado al principio de la función
-empuje=D+W*sin(gamma);
-
 
