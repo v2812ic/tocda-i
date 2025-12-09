@@ -30,9 +30,9 @@ fronteras.vMinAproximacion = 50;
 nombreAvion = "Bombardier Challenger 300";
 
 % Parámetros aerodinámicos (adim)
-parametros.cD0Despegue = 0.045;
-parametros.cD0Crucero = 0.013;
-parametros.cD0Descenso = 0.016;
+parametros.cD0Despegue = 0.042;
+parametros.cD0Crucero = 0.011;
+parametros.cD0Descenso = 0.015;
 parametros.k = 0.043;
 
 % Parámetros de motor
@@ -50,6 +50,81 @@ fronteras.vMaxDespegue = 62;
 fronteras.vMinDespegue = 72;
 fronteras.vMaxAproximacion = 57;
 fronteras.vMinAproximacion = 67;
+
+% NOMBRE DEL AVIÓN 
+nombreAvion = "A380-800";
+
+% Parámetros aerodinámicos (adim)
+parametros.cD0Despegue = 0.055;
+parametros.cD0Crucero = 0.014;
+parametros.cD0Descenso = 0.017;
+parametros.k = 0.043;
+
+% Parámetros de motor
+
+% Parametros masicos (kg)
+parametros.OEW = 277000;
+parametros.MTOW = 575000;
+
+% Restricciones
+fronteras.FWmax = 250000; % (kg)
+fronteras.techoDeVuelo = 13000; % (m)
+fronteras.vMaxCrucero = 251; % todas las velocidades (m/s)   
+fronteras.vMinCrucero = 236;
+fronteras.vMaxDespegue = 77;
+fronteras.vMinDespegue = 93;
+fronteras.vMaxAproximacion = 72;
+fronteras.vMinAproximacion = 77;
+
+% NOMBRE DEL AVIÓN 
+nombreAvion = "A350-1000";
+
+% Parámetros aerodinámicos (adim)
+parametros.cD0Despegue = 0.040;
+parametros.cD0Crucero = 0.009;
+parametros.cD0Descenso = 0.017;
+parametros.k = 0.037;
+
+% Parámetros de motor
+
+% Parametros masicos (kg)
+parametros.OEW = 206 000;
+parametros.MTOW = 322 000;
+
+% Restricciones
+fronteras.FWmax = 124 000; % (kg)
+fronteras.techoDeVuelo = 13000; % (m)
+fronteras.vMaxCrucero = 250; % todas las velocidades (m/s)   
+fronteras.vMinCrucero = 236;
+fronteras.vMaxDespegue = 77;
+fronteras.vMinDespegue = 87;
+fronteras.vMaxAproximacion = 72;
+fronteras.vMinAproximacion = 77;
+
+% NOMBRE DEL AVIÓN 
+nombreAvion = "Concorde";
+
+% Parámetros aerodinámicos (adim)
+parametros.cD0Despegue = 0.075;
+parametros.cD0Crucero = 0.020;
+parametros.cD0Descenso = 0.026;
+parametros.k = 0.22;
+
+% Parámetros de motor
+
+% Parametros masicos (kg)
+parametros.OEW = 78 700;
+parametros.MTOW = 185 000;
+
+% Restricciones
+fronteras.FWmax = 95 700; % (kg)
+fronteras.techoDeVuelo = 18 300; % (m)
+fronteras.vMaxCrucero = 592; % todas las velocidades (m/s)   
+fronteras.vMinCrucero = 610;
+fronteras.vMaxDespegue = 77;
+fronteras.vMinDespegue = 87;
+fronteras.vMaxAproximacion = 103;
+fronteras.vMinAproximacion = 113;
 
 ruta = strcat("Data/datos_", nombreAvion, ".mat");
 
