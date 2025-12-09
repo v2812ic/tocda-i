@@ -12,7 +12,7 @@ function dmdt = calcularMotor(avion, estado, T)
 Alt = estado.h;
 z = ISA(Alt); 
 Mach = estado.V / (340*sqrt(z)); %Cálculo del Mach de vuelo
-ThrustReq = T;  %Empuje requerido
+ThrustReq = T/avion.nummotores;  %Empuje requerido
 
 % Cambio de los parámetros del motor 
 % Fmax=> Maximum sea-level static thrust (N)
@@ -39,6 +39,8 @@ opts.TolN      = 1.0;   %Tolerancia en Newtons
 
 % Llamada a la función
 dmdt = FuelFlow_Turbofan(Mach, Alt, ThrustReq, opts);
+
+dmdt = dmdt * avion.nummotores;
 
 end
 
