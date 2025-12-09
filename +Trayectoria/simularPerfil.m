@@ -98,9 +98,10 @@ while g==i
     gamma = gamma_f(i);
 
     %Calcula las derivadas de estado
-    dS = dinamicaDeVuelo(Ins.t(i,j-1), S, v, gamma);
+    T = calcular_fuerzas_aero(v, Ins.alt(i,j), Ins.peso(i,j)*9.81, gamma);
+    dm = calcularMotor(Avion, estado, T);
 
-    odefun = dS(3);
+    odefun = dm;
     tspan = [0 t_fase(i)/100];
     %ini = Avion.properties.estado;
     ini = 0;
@@ -124,7 +125,9 @@ while g==i
 
 
     %Vector de estado
-    S = [Ins.dist(i,j), Ins.alt(i,j), Ins.peso(i,j)];
+    estado = struct;
+    estado.h=Ins.alt(i,j);
+    estado.V=v;
 
     
     %Analiza si termina la fase
@@ -164,9 +167,9 @@ while g==i
     v = vel(i);
     gamma = gamma_f(i);
 
-    dS = dinamicaDeVuelo(Ins.t(i,j-1), S, v, gamma);
-
-    odefun = dS(3);
+    T = calcular_fuerzas_aero(v, Ins.alt(i,j), Ins.peso(i,j)*9.81, gamma);
+    dm = calcularMotor(Avion, estado, T);
+    odefun = dm;
     tspan = [0 t_fase(i)/100];
     ini = 0;
 
@@ -191,7 +194,9 @@ while g==i
 
 
 
-    S = [Ins.dist(i,j), Ins.alt(i,j), Ins.peso(i,j)];
+    estado = struct;
+    estado.h=Ins.alt(i,j);
+    estado.V=v;
 
 
 
@@ -227,9 +232,10 @@ while g==i
     v = vel(i);
     gamma = gamma_f(i);
 
-    dS = dinamicaDeVuelo(Ins.t(i,j-1), S, v, gamma);
+    T = calcular_fuerzas_aero(v, Ins.alt(i,j), Ins.peso(i,j)*9.81, gamma);
+    dm = calcularMotor(Avion, estado, T);
 
-    odefun = dS(3);
+    odefun = dm;
     tspan = [0 t_fase(i)/100];
     ini = 0;
 
@@ -255,7 +261,9 @@ while g==i
 
 
 
-    S = [Ins.dist(i,j), Ins.alt(i,j), Ins.peso(i,j)];
+    estado = struct;
+    estado.h=Ins.alt(i,j);
+    estado.V=v;
 
 
 
@@ -291,9 +299,10 @@ while g==i
     v = vel(i);
     gamma = gamma_f(i);
 
-    dS = dinamicaDeVuelo(Ins.t(i,j-1), S, v, gamma);
+    T = calcular_fuerzas_aero(v, Ins.alt(i,j), Ins.peso(i,j)*9.81, gamma);
+    dm = calcularMotor(Avion, estado, T);
 
-    odefun = dS(3);
+    odefun = dm;
     tspan = [0 t_fase(i)/100];
     ini = 0;
 
@@ -319,7 +328,9 @@ while g==i
 
 
 
-    S = [Ins.dist(i,j), Ins.alt(i,j), Ins.peso(i,j)];
+    estado = struct;
+    estado.h=Ins.alt(i,j);
+    estado.V=v;
 
 
 
@@ -356,9 +367,10 @@ while g==i
     v = vel(i);
     gamma = gamma_f(i);
 
-    dS = dinamicaDeVuelo(Ins.t(i,j-1), S, v, gamma);
+    T = calcular_fuerzas_aero(v, Ins.alt(i,j), Ins.peso(i,j)*9.81, gamma);
+    dm = calcularMotor(Avion, estado, T);
 
-    odefun = dS(3);
+    odefun = dm;
     tspan = [0 t_fase(i)/100];
     ini = 0;
 
@@ -384,7 +396,9 @@ while g==i
 
 
 
-    S = [Ins.dist(i,j), Ins.alt(i,j), Ins.peso(i,j)];
+    estado = struct;
+    estado.h=Ins.alt(i,j);
+    estado.V=v;
 
 
 
@@ -398,3 +412,4 @@ Resultado.tiempoTotal = Ins.t_total(end, end);
 Resultado.combustibleConsumido = Ins.comb_cons(end,end);
 
 end
+
