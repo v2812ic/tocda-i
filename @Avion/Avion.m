@@ -21,6 +21,7 @@ classdef Avion < handle
         % Parámetros de motor
         Tsl         %Empuje a nivel del mar
         TSFCsl      %Consumo específico a nivel del mar
+        nummotores  %Número de motores
         % Parametros masicos
         OEW
         MTOW
