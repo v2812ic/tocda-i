@@ -2,13 +2,15 @@
 % TODOS LOS PARAMETROS EN SISTEMA INTERNACIONAL 
 
 % NOMBRE DEL AVIÓN 
-nombreAvion = "B747";
+nombreAvion = "A320";
 
 % Parámetros aerodinámicos (adim)
 parametros.cD0Despegue = 1.2;
 parametros.cD0Crucero = 1.2;
 parametros.cD0Descenso = 1.2;
 parametros.k = 1.2;
+
+parametros.S = 122.6; %superficie alar m2
 
 % Parámetros de motor
 parametros.Tsl = 120e3;

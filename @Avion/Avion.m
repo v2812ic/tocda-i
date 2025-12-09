@@ -70,9 +70,12 @@ classdef Avion < handle
                 avion.cD0Descenso = parametros.cD0Descenso;
                 avion.k = parametros.k;
 
+                avion.S = parametros.S;
+                
                 % parametros del motor
                 avion.Tsl = parametros.Tsl;
                 avion.TSFCsl = parametros.TSFCsl;
+                avion.nummotores = parametros.nummotores;
 
                 % parametros masicos
                 avion.MTOW = parametros.MTOW;
