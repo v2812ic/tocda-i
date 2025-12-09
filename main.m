@@ -88,13 +88,32 @@ for i = 1:length(aviones)
 
         plotPareto(F_ga, avionActual);
     
-    fprintf("Optimización heurística completada.\n\n")  
+    fprintf("   Optimización heurística completada.\n\n")  
     end
     
     %% 2.2. Algoritmo de gradiente
     if control.gradiente
-    fprintf("Comienza la optimización por algoritmo gradiente.\n")
-    fprintf("Optimización gradiente completada.\n\n")  
+        fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
+        
+        x0 = (lb + ub) / 2;
+
+        funcionCosteEscalar = @(x) sumaPonderada(x, masterEval, w1, w2);
+        
+        optionsGrad = optimoptions('fmincon', ...
+            'Display', 'iter', ...
+            'Algorithm', 'sqp'); 
+            
+        [X_grad, J_val, exitflag_grad, output_grad] = fmincon(funcionCosteEscalar, ...
+            x0, [], [], [], [], lb, ub, [], optionsGrad);
+            
+        F_grad = masterEval(X_grad);
+        
+        Resultados.(avionActual).grad.X = X_grad;
+        Resultados.(avionActual).grad.F = F_grad; 
+        Resultados.(avionActual).grad.J = J_val;
+        Resultados.(avionActual).grad.output = output_grad;
+        
+        fprintf("   Optimización gradiente completada.\n\n");
     end
 end
     
