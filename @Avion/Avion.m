@@ -19,7 +19,9 @@ classdef Avion < handle
         k
 
         % Parámetros de motor
-
+        Tsl         %Empuje a nivel del mar
+        TSFCsl      %Consumo específico a nivel del mar
+        nummotores  %Número de motores
         % Parametros masicos
         OEW
         MTOW
@@ -69,6 +71,8 @@ classdef Avion < handle
                 avion.k = parametros.k;
 
                 % parametros del motor
+                avion.Tsl = parametros.Tsl;
+                avion.TSFCsl = parametros.TSFCsl;
 
                 % parametros masicos
                 avion.MTOW = parametros.MTOW;
@@ -92,6 +96,6 @@ classdef Avion < handle
             end        
         end
         % T = calcularAeroyFuerzas(avion);
-        % dm = calcularMotor(avion, estado);
+        % dm = calcularMotor(avion, estado, T);
     end
 end

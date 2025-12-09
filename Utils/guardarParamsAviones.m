@@ -11,6 +11,9 @@ parametros.cD0Descenso = 0.015;
 parametros.k = 0.043;
 
 % Parámetros de motor
+parametros.Tsl = 120e3;
+parametros.TSFCsl = 1e-5;
+parametros.nummotores = 2;
 
 
 % Parametros masicos (kg)
