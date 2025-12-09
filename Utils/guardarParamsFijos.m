@@ -4,7 +4,7 @@ parametros.h_origen = 0; % (m)
 parametros.h_destino = 0;
 parametros.distancia = 1e6;
 
-parametros.PL = 1e4;
+parametros.PL = 1e2;
 parametros.seguridadFuel = 1.1;
 
 fronteras.maxTasaAscenso = 100; % (m/s)
