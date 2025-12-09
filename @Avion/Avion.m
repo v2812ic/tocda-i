@@ -17,6 +17,7 @@ classdef Avion < handle
         cD0Crucero
         cD0Descenso
         k
+        S
 
         % Parámetros de motor
         Tsl         %Empuje a nivel del mar
