@@ -13,7 +13,8 @@ addpath('Utils');
 
 %% 0. Control y setup de simulación
 
-aviones = ["A320"]; % etc
+
+aviones = ["BC300"]; % etc
 heuristico = true; % genetico
 gradiente = false; 
 
@@ -68,33 +69,59 @@ for i = 1:length(aviones)
         avion.vMaxCrucero, avion.vMaxCrucero, avion.vMaxAproximacion, ...
         avion.techoDeVuelo, avion.techoDeVuelo, ...
         min(avion.FWmax, avion.MTOW - avion.OEW - parametrosFijos.PL)];
+    
+    fprintf("verga");
 
     masterEval = @(X) evaluarVuelo(X, avion, parametrosFijos, fronterasFijas);
+    objFun = @(x) getOutput(masterEval, x); 
+    nonlconFun = @(x) getConstraints(masterEval, x);
+
+    fprintf("verga2");
     
     fprintf("Carga de datos completada, comienza la optimización.\n")
     %% 2.1. Algoritmo heuristico
 
     if control.heuristico
-    fprintf("Comienza la optimización por algoritmo genético.\n")
+        fprintf("Comienza la optimización por algoritmo genético.\n")
         optionsGA = optimoptions('gamultiobj', ...
-            'UseParallel',true);
-
-        [X_ga, F_ga, exitflag_ga, output_ga] = gamultiobj(masterEval, ...
-            control.nvars, [], [], [], [], lb, ub, optionsGA);
-
+            'UseParallel', true, ...
+            'Display', 'iter');
+        
+        % IMPORTANTE: nonlconFun va en el argumento 9
+        [X_ga, F_ga, exitflag_ga, output_ga] = gamultiobj(objFun, ...
+            control.nvars, [], [], [], [], lb, ub, nonlconFun, optionsGA);
+            
         Resultados.(avionActual).ga.X = X_ga;
         Resultados.(avionActual).ga.F = F_ga;
         Resultados.(avionActual).ga.output = output_ga;
-
-        plotPareto(F_ga, avionActual);
-    
-    fprintf("Optimización heurística completada.\n\n")  
+        
+        if exist('plotPareto','file'), plotPareto(F_ga, avionActual); end
+        fprintf("   Optimización heurística completada.\n\n")  
     end
     
     %% 2.2. Algoritmo de gradiente
     if control.gradiente
-    fprintf("Comienza la optimización por algoritmo gradiente.\n")
-    fprintf("Optimización gradiente completada.\n\n")  
+        fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
+        
+        x0 = (lb + ub) / 2;
+
+        funcionCosteEscalar = @(x) sumaPonderada(x, masterEval, w1, w2);
+        
+        optionsGrad = optimoptions('fmincon', ...
+            'Display', 'iter', ...
+            'Algorithm', 'sqp'); 
+            
+        [X_grad, J_val, exitflag_grad, output_grad] = fmincon(funcionCosteEscalar, ...
+            x0, [], [], [], [], lb, ub, [], optionsGrad);
+            
+        F_grad = masterEval(X_grad);
+        
+        Resultados.(avionActual).grad.X = X_grad;
+        Resultados.(avionActual).grad.F = F_grad; 
+        Resultados.(avionActual).grad.J = J_val;
+        Resultados.(avionActual).grad.output = output_grad;
+        
+        fprintf("   Optimización gradiente completada.\n\n");
     end
 end
     
@@ -105,4 +132,16 @@ fprintf(strcat("\nOptimización completada, guardando resultados.\n\n"));
 fechaHora = datetime("now", "Format", "yyyyMMdd_HHmm");
 nombreArchivo = fullfile("Resultados", "Resultados_" + char(fechaHora) + ".mat");
 save(nombreArchivo, 'Resultados');
+
+
+%% 4. FUNCIONES AUXILIARES
+function f = getOutput(funHandle, x)
+    % Llama a evaluarVuelo y se queda solo con el primer output (objetivos)
+    [f, ~, ~] = funHandle(x);
+end
+
+function [c, ceq] = getConstraints(funHandle, x)
+    % Llama a evaluarVuelo y se queda con el segundo y tercero (restricciones)
+    [~, c, ceq] = funHandle(x);
+end
 
