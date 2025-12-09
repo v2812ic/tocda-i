@@ -15,28 +15,63 @@
 %% Función de construcción del problema no lineal
 
 function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronterasFijas)
+    import Trayectoria.simularPerfil
 
-% Imports de función de simulación, tiene que estar dentro de la función
-% para que la función sea reconocida
-import Trayectoria.simularPerfil
-
-    distFases = [X(1:4)];
-    velFases = [X(5:9)];
-    altitudCruceros = [X(10:11)];
+    % Desempaquetado (claridad)
+    distAscenso = X(1);
+    distDescenso = X(4);
+    velAscenso = X(5);
+    velDescenso = X(9);
+    hCrucero = X(10); 
     fuelInicial = X(12);
     
-    resultados = simularPerfil(distFases, velFases, altitudCruceros, fuelInicial, ...
+    % --- 1. SIMULACIÓN ---
+    resultados = simularPerfil(X(1:4), X(5:9), X(10:11), fuelInicial, ...
         parametrosFijos, fronterasFijas, Avion);
     
-    objetivos = [resultados.tiempoTotal, resultados.combustibleConsumido];
+    % --- 2. OBJETIVOS ---
+    objetivos = [resultados.tiempoTotal; resultados.combustibleConsumido];
     
-    % restricciones de igualdad (que no se rompa la física solamente)
-    ceq = resultados.violacionRestricciones;
+    % --- 3. RESTRICCIONES DE IGUALDAD (ceq = 0) ---
+    ceq = [resultados.violacionRestricciones]; 
     
-    % restricciones de desigualdad (que llegue a destino sin romper la física y
-    % que no gaste todo el combustible)
-    c(1) = resultados.combustibleConsumido - parametrosFijos.seguridadFuel * fuelInicial;
-    c(2) = -sum(distFases) + parametrosFijos.distancia - fronterasFijas.x5Max;
-    c(3) = sum(distFases) - parametrosFijos.distancia + fronterasFijas.x5Min;
+    % --- 4. RESTRICCIONES DE DESIGUALDAD (c <= 0) ---
+    c = [];
+    idx = 1;
+    
+    % A) Combustible suficiente
+    c(idx) = resultados.combustibleConsumido - parametrosFijos.seguridadFuel * fuelInicial;
+    idx = idx + 1;
+    
+    % B) Distancia Total (Mínima y Máxima requerida)
+    distanciaCalculada = sum(X(1:4));
+    % Que no sea más corta que la ruta
+    c(idx) = (parametrosFijos.distancia - fronterasFijas.x5Min) - distanciaCalculada;
+    idx = idx + 1;
+    % Que no sea más larga que la ruta (si aplica)
+    c(idx) = distanciaCalculada - (parametrosFijos.distancia + fronterasFijas.x5Max); 
+    idx = idx + 1;
 
+    % C) FÍSICA DE ASCENSO (Evita subidas verticales)
+    % Delta Altura Ascenso
+    deltaH_asc = hCrucero - parametrosFijos.h_origen;
+    
+    % Tasa Max: deltaH * v - MaxRoC * dist <= 0
+    c(idx) = (deltaH_asc * velAscenso) - (fronterasFijas.maxTasaAscenso * distAscenso);
+    idx = idx + 1;
+    
+    % Tasa Min: MinRoC * dist - deltaH * v <= 0
+    c(idx) = (fronterasFijas.minTasaAscenso * distAscenso) - (deltaH_asc * velAscenso);
+    idx = idx + 1;
+    
+    % D) FÍSICA DE DESCENSO
+    % Delta Altura Descenso
+    deltaH_des = hCrucero - parametrosFijos.h_destino;
+    
+    % Tasa Max Descenso
+    c(idx) = (deltaH_des * velDescenso) - (fronterasFijas.maxTasaDescenso * distDescenso);
+    idx = idx + 1;
+    
+    % Tasa Min Descenso
+    c(idx) = (fronterasFijas.minTasaDescenso * distDescenso) - (deltaH_des * velDescenso);
 end
