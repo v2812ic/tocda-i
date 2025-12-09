@@ -25,14 +25,14 @@
 
 
 
-function empuje=calcular_fuerzas_aero(v,h,W)
+function empuje=calcular_fuerzas_aero(v, h, W, gamma, avion)
 %S viene de los datos del avión
 %h viene de la función simular perfil
 %v viene de la función simular perfil
 %W viene de la función simular perfil
 %gamma viene de la función simular perfil
-%Cdo viene de los datos del avión
-%k viene de los datos del avión
+Cdo=Cdo.avion
+k=k.avion
 if h<=11000
     rho=1.225*(1-0.000022558*h)^4.2559;
 else
@@ -46,4 +46,4 @@ Cd=k*Cl+Cdo;
 %Calculamos D
 D=(1/2)*rho*v^2*S*Cd;
 %Sumamos a D la componente del peso en el eje horizontal del avión. Importante llamarlo empuje porque es el nombre que hemos dado al principio de la función
-empuje=D+W*sin(deg2rad(gamma));
+empuje=D+W*sin(gamma);
