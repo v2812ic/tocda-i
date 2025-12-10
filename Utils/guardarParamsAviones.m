@@ -2,35 +2,29 @@
 % TODOS LOS PARAMETROS EN SISTEMA INTERNACIONAL 
 
 % NOMBRE DEL AVIÓN 
-nombreAvion = "BC300";
+nombreAvion = "Concorde";
 
 % Parámetros aerodinámicos (adim)
-parametros.cD0Despegue = 0.042;
-parametros.cD0Crucero = 0.011;
-parametros.cD0Descenso = 0.015;
-parametros.k = 0.043;
-
-parametros.S = 122.6; %superficie alar m2
+parametros.cD0Despegue = 0.075;
+parametros.cD0Crucero = 0.020;
+parametros.cD0Descenso = 0.026;
+parametros.k = 0.22;
 
 % Parámetros de motor
-parametros.Tsl = 120e3;
-parametros.TSFCsl = 1e-5;
-parametros.nummotores = 2;
-
 
 % Parametros masicos (kg)
-parametros.OEW = 10600;
-parametros.MTOW = 17622;
+parametros.OEW = 78700;
+parametros.MTOW = 185000;
 
 % Restricciones
-fronteras.FWmax = 6400; % (kg)
-fronteras.techoDeVuelo = 13716; % (m)
-fronteras.vMaxCrucero = 245; % todas las velocidades (m/s)   
-fronteras.vMinCrucero = 236;
-fronteras.vMaxDespegue = 72;
-fronteras.vMinDespegue = 62;
-fronteras.vMaxAproximacion = 67;
-fronteras.vMinAproximacion = 57;
+fronteras.FWmax = 95700; % (kg)
+fronteras.techoDeVuelo = 18300; % (m)
+fronteras.vMaxCrucero = 610 ; % todas las velocidades (m/s)   
+fronteras.vMinCrucero = 592;
+fronteras.vMaxDespegue = 87;
+fronteras.vMinDespegue = 77;
+fronteras.vMaxAproximacion = 113;
+fronteras.vMinAproximacion = 103;
 ruta = strcat("Data/datos_", nombreAvion, ".mat");
 
 save(ruta, 'parametros', 'fronteras');
