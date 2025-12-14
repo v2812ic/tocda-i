@@ -7,10 +7,10 @@ parametros.distancia = 1e6;
 parametros.PL = 1e4;
 parametros.seguridadFuel = 1.1;
 
-fronteras.maxTasaAscenso = 100; % (m/s)
-fronteras.minTasaAscenso = 10;
-fronteras.maxTasaDescenso = 100; 
-fronteras.minTasaDescenso = 10; 
+fronteras.maxTasaAscenso = 0.5; % (rad)
+fronteras.minTasaAscenso = 0;
+fronteras.maxTasaDescenso = 0.5; 
+fronteras.minTasaDescenso = 0; 
 
 fronteras.x1Max = 1e5; % (m)
 fronteras.x2Max = 1e5;
@@ -28,5 +28,6 @@ fronteras.x5Min = 1e5;
 fronteras.hCruceroMin = 1e4;
 
 ruta = fullfile('Data/restriccionesGenerales.mat');
+
 
 save(ruta, 'parametros', 'fronteras');
