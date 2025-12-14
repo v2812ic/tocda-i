@@ -24,7 +24,7 @@
 %end
 
 
-function empuje=calcular_fuerzas_aero(v, h, W, gamma, Avion)
+function empuje = calcularAeroyFuerzas(v, h, W, gamma, Avion)
 %h viene de la función simular perfil
 %v viene de la función simular perfil
 %W viene de la función simular perfil

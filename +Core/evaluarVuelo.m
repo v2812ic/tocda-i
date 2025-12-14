@@ -26,6 +26,7 @@ function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronteras
     fuelInicial = X(12);
     
     % --- 1. SIMULACIÓN ---
+
     resultados = simularPerfil(X(1:4), X(5:9), X(10:11), fuelInicial, ...
         parametrosFijos, fronterasFijas, Avion);
     

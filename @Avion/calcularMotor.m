@@ -300,8 +300,18 @@ function apply_engine_params(p)
     if isfield(p,'units')
         set_param(blk,'units', p.units);            % 'Metric (MKS)' / 'English'
     end
-
-    save_system(model);
+    
+    %% 
+    % He tocado esto de aquí para que los procesadores paralelos puedan
+    % reescribir su modelo 
+    % try
+    %     save_system(model, [], 'OverwriteIfChangedOnDisk', true);
+    % catch
+    %     % Si falla por acceso concurrente muy agresivo, esperamos un poco y reintentamos
+    %     pause(0.05);
+    %     save_system(model, [], 'OverwriteIfChangedOnDisk', true);
+    % end
+    %% 
 end
 
 function [z,d] = ISA(h)

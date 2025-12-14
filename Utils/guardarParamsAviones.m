@@ -10,7 +10,7 @@ parametros.cD0Crucero = 0.011;
 parametros.cD0Descenso = 0.015;
 parametros.k = 0.043;
 
-parametros.S = 122.6; %superficie alar m2
+parametros.S = 122.6; 
 
 % Parámetros de motor
 parametros.Tsl = 120e3;
