@@ -18,13 +18,13 @@ gamma_f(isnan(gamma_f)) = 0;
 V_asc = vel.*sin(gamma_f);
 
 % Comprobación de restricciones (solo si la fase existe)
-if (Dist(1)>0) && ((V_asc(1)>fronteras.maxTasaAscenso) || (V_asc(1) < fronteras.minTasaAscenso))
+if (Dist(1)>0) && ((gamma_f(1)>fronteras.maxTasaAscenso) || (gamma_f(1) < fronteras.minTasaAscenso))
     Resultado.violacionRestricciones = 1;
     g = 8;
-elseif (Dist(3)>0) && ((V_asc(3)>fronteras.maxTasaAscenso) || (V_asc(3) < fronteras.minTasaAscenso))
+elseif (Dist(3)>0) && ((gamma_f(3)>fronteras.maxTasaAscenso) || (gamma_f(3) < fronteras.minTasaAscenso))
     Resultado.violacionRestricciones = 1;
     g = 8;
-elseif (Dist(5)>0) && ((abs(V_asc(5))>fronteras.maxTasaDescenso) || (abs(V_asc(5))<fronteras.minTasaDescenso))
+elseif (Dist(5)>0) && ((abs(gamma_f(5))>fronteras.maxTasaDescenso) || (abs(gamma_f(5))<fronteras.minTasaDescenso))
     Resultado.violacionRestricciones = 1;
     g = 8;
 elseif TOW>Avion.MTOW
@@ -52,7 +52,7 @@ Ins.peso(i,j) = TOW;
 j = 1+j;
 
 % LOGICA DE SALTO: Si hay distancia, simulamos. Si no, saltamos.
-if Dist(i) > 1 
+if Dist(i) > 0 
     while g==i
         v = vel(i);
         gamma = gamma_f(i);
@@ -89,7 +89,7 @@ if Dist(i) > 1
         g = detenerEnDistancia(Dist, Ins.dist(i,j));
         j = 1+j;
     end
-else
+elseif Dist(i)==0 && g~=8
     % Si la distancia es 0, damos la fase por terminada inmediatamente
     g = i + 1; 
 end
@@ -115,7 +115,7 @@ Ins.peso(i,j) = Ins.peso(i-1,idx_ant);
 
 j = 1+j;
 
-if Dist(i) > 1
+if Dist(i) > 0
     while g==i
         v = vel(i);
         gamma = gamma_f(i);
@@ -154,7 +154,7 @@ if Dist(i) > 1
         g = detenerEnDistancia(Dist, Ins.dist_total(i,j));
         j = 1+j;
     end
-else
+elseif Dist(i)==0 && g~=8
     g = i + 1;
 end
 
@@ -176,7 +176,7 @@ Ins.peso(i,j) = Ins.peso(i-1,idx_ant);
 
 j = 1+j;
 
-if Dist(i) > 1
+if Dist(i) > 0
     while g==i
         v = vel(i);
         gamma = gamma_f(i);
@@ -215,7 +215,7 @@ if Dist(i) > 1
         g = detenerEnDistancia(Dist, Ins.dist_total(i,j));
         j = 1+j;
     end
-else
+elseif Dist(i)==0 && g~=8
     g = i + 1;
 end
 
@@ -237,7 +237,7 @@ Ins.peso(i,j) = Ins.peso(i-1,idx_ant);
 
 j = 1+j;
 
-if Dist(i) > 1
+if Dist(i) > 0
     while g==i
         v = vel(i);
         gamma = gamma_f(i);
@@ -276,7 +276,7 @@ if Dist(i) > 1
         g = detenerEnDistancia(Dist, Ins.dist_total(i,j));
         j = 1+j;
     end
-else
+elseif Dist(i)==0 && g~=8
     g = i + 1;
 end
 
@@ -298,7 +298,7 @@ Ins.peso(i,j) = Ins.peso(i-1,idx_ant);
 
 j = 1+j;
 
-if Dist(i) > 1
+if Dist(i) > 0
     while g==i
         v = vel(i);
         gamma = gamma_f(i);
@@ -337,7 +337,7 @@ if Dist(i) > 1
         g = detenerEnDistancia(Dist, Ins.dist_total(i,j));
         j = 1+j;
     end
-else
+elseif Dist(i)==0 && g~=8
     g = i + 1;
 end
 
@@ -351,3 +351,4 @@ else
     Resultado.combustibleConsumido = Ins.comb_cons(i,idx_final);
 end
 end
+
