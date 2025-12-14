@@ -9,15 +9,43 @@
 %   L           (scalar) Fuerza de sustentación (N)
 %   D           (scalar) Fuerza de resistencia (N)
 
-function [L, D, T] = calcularAeroyFuerzas(avion)
+%function [L, D, T] = calcularAeroyFuerzas(avion)
 
 % ME ESTOY RAYANDO CON CÓMO IMPLEMENTAR EL CÁLCULO DE alpha. Revisar que
 % creo que está mal configurada esta función con respecto a lo que se
 % declara en la clase
 
-L = pi;
-cL = pi;
+%L = pi;
+%cL = pi;
 
 % distinguir entre fases según el estado
-D = avion.cd0 + avion.k*(cL^2);
+%D = avion.cd0 + avion.k*(cL^2);
+
+%end
+
+
+function empuje = calcularAeroyFuerzas(v, h, W, gamma, Avion)
+%h viene de la función simular perfil
+%v viene de la función simular perfil
+%W viene de la función simular perfil
+%gamma viene de la función simular perfil
+cd0=Avion.cD0Crucero;
+k=Avion.k;
+S=Avion.S;
+if h<=11000
+    rho=1.225*(1-0.000022558*h)^4.2559;
+else
+    rho=0.03639*exp(-0.00015769*(h-11000));
 end
+
+Cl=W*cos(gamma)/((1/2)*rho*v^2*S);
+    
+%Calculamos el Cd
+Cd=k*Cl+cd0;
+%Calculamos D
+D=(1/2)*rho*v^2*S*Cd;
+%Sumamos a D la componente del peso en el eje horizontal del avión. Importante llamarlo empuje porque es el nombre que hemos dado al principio de la función
+empuje=D+W*sin(gamma);
+
+
+
