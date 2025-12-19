@@ -2,7 +2,7 @@
 % TODOS LOS PARAMETROS EN SISTEMA INTERNACIONAL 
 
 % NOMBRE DEL AVIÓN 
-nombreAvion = "BC300";
+nombreAvion = "BC_300";
 
 % Parámetros aerodinámicos (adim)
 parametros.cD0Despegue = 0.042;
