@@ -13,7 +13,7 @@ function dmdt = calcularMotor(Avion, estado, T)
 Alt = estado.h;
 z = ISA(Alt); 
 Mach = estado.V / (340*sqrt(z)); %Cálculo del Mach de vuelo
-ThrustReq = T/Avion.nummotores;  %Empuje requerido
+Thrust_Req = T/Avion.nummotores;  %Empuje requerido
 
 % Cambio de los parámetros del motor 
 % Fmax=> Maximum sea-level static thrust (N)
@@ -24,7 +24,7 @@ ThrustReq = T/Avion.nummotores;  %Empuje requerido
 % ic_source=> initial thrust source ('Internal' o 'External')
 % IC=> initial thrust (N) (solo aplica si ic_source = 'Eternal')
 
-params = struct('Fmax',200e3,'SFC',0.1);
+params = struct('Fmax',Avion.Tsl,'SFC',Avion.SFCsl);
 
 apply_engine_params(params);
 
@@ -44,17 +44,17 @@ Fuel_data = Fuel_data(idx);
 
 
 
-dmdt = interp1(Thrust_data, Fuel_data, ThrustReq);
+dmdt = interp1(Thrust_data, Fuel_data, Thrust_Req)*Avion.nummotores;
 
 
 %Aviso si se le está pidiendo más empuje del que da el motor
-if Thrust_req>max(Thrust_data)
+if Thrust_Req>max(Thrust_data)
 
     warning('El motor no es capaz de dar el suficiente empuje. Empuje requerido: %.1f N, Empuje máximo %.1f N', ...
-        Thrust_req, max(Thrust_data))
+        Thrust_Req, max(Thrust_data))
     warning('El valor del consumo se ha conseguido por extrapolación')
 
-    dmdt = interp1(Thrust_data, Fuel_data, Thrust_req, 'linear', 'extrap');
+    dmdt = interp1(Thrust_data, Fuel_data, Thrust_Req, 'linear', 'extrap');
 end
 
 end
@@ -117,8 +117,41 @@ function apply_engine_params(p)
         load_system(model);   % no abre ventana
     end
 
-    % 2) Nombre del archivo de Simulink
-    blk = 'Turbofan_Model/Turbofan Engine System';  % ruta completa al bloque dentro del modelo
+    % 2) Intentar encontrar el bloque por distintas claves
+    blk = '';  % ruta completa al bloque dentro del modelo
+
+    % (a) Por referencia a la librería donde vive el bloque
+    hits = find_system(model, 'LookUnderMasks','all', 'FollowLinks','on', ...
+        'ReferenceBlock','aerolibpropulsion2/Turbofan Engine System');
+    if ~isempty(hits); blk = hits{1}; end
+
+    % (b) Si no, por MaskType típico
+    if isempty(blk)
+        hits = find_system(model, 'LookUnderMasks','all', 'FollowLinks','on', ...
+            'MaskType','Turbofan Engine System');
+        if ~isempty(hits); blk = hits{1}; end
+    end
+
+    % (c) Si no, por nombre aproximado del bloque dentro del modelo
+    if isempty(blk)
+        hits = find_system(model, 'LookUnderMasks','all', 'FollowLinks','on', ...
+            'Name','Turbofan Engine System');
+        if ~isempty(hits); blk = hits{1}; end
+    end
+
+    % (d) Último intento: ¿lo llamaste "Turbofan Engine"?
+    if isempty(blk)
+        hits = find_system(model, 'LookUnderMasks','all', 'FollowLinks','on', ...
+            'Name','Turbofan Engine');
+        if ~isempty(hits); blk = hits{1}; end
+    end
+
+    % Si sigue vacío, avisar con info útil
+    if isempty(blk)
+        error(['No encuentro el bloque Turbofan dentro de ', model, ...
+               '. Abre el modelo y dime el nombre exacto del bloque o selecciona el bloque y usa: ', ...
+               'getfullname(gcb)']);
+    end
 
 
     % 3) Aplicar parámetros
