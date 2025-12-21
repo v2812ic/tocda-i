@@ -75,4 +75,5 @@ function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronteras
     
     % Tasa Min Descenso
     c(idx) = (fronterasFijas.minTasaDescenso * distDescenso) - (deltaH_des * velDescenso);
+    
 end
