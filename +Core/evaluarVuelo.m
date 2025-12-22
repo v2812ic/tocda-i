@@ -1,32 +1,50 @@
-% Función del optimizador. Es el constructor del problema de optimización.
+% EVALUARVUELO Evalúa la función de coste y restricciones para la optimización de trayectoria.
 %
-% Inputs:
-%   X           (vector 1x12) Vector de variables de decisión
-%   fixedParams (struct)  Estructura con parámetros fijos (payload, dist, etc.)
-%   avionObj    (objeto)  Objeto de la clase 'Avion'
+%   Esta función actúa como el constructor del problema de optimización no lineal.
+%   Recibe el vector de decisión X, simula el vuelo llamando a 'simularPerfil',
+%   y construye los vectores de objetivos y restricciones.
 %
-% Outputs:
-%   objetivos   (vector 2x1) [TiempoTotal; ConsumoNormalizado]
-%   c           (vector Nx1) Restricciones de DESIGUALDAD (c <= 0) (no
-%   lineales, no hay)
-%   ceq         (vector Mx1) Restricciones de IGUALDAD (ceq = 0) (no
-%   lineales, solo hay la del combustible)
-
-%% Función de construcción del problema no lineal
+%   ESTADO: VERIFICADO Y FUNCIONAL (Test unitario superado).
+%
+%   SINTAXIS:
+%       [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronterasFijas)
+%
+%   ENTRADAS:
+%       X               (1x12 double) Vector de variables de decisión:
+%                           X(1:4): Distancias horizontales de fases (m)
+%                           X(5:9): Velocidades TAS (m/s)
+%                           X(10:11): Altitudes clave (m)
+%                           X(12): Combustible inicial (kg)
+%       Avion           (Objeto) Instancia de la clase Avion con modelo de performance.
+%       parametrosFijos (struct) Parámetros de la misión (distancia total, h_origen, etc.).
+%       fronterasFijas  (struct) Límites físicos y operativos:
+%                           .x5Min, .x5Max: Límites geometría descenso.
+%                           .maxTasaAscenso: Límite positivo (ej. +20 m/s).
+%                           .maxTasaDescenso: Límite NEGATIVO (ej. -15 m/s).
+%
+%   SALIDAS:
+%       objetivos       (2x1 double) [TiempoTotal (s); Consumo (kg)].
+%       c               (Nx1 double) Restricciones de DESIGUALDAD (c <= 0).
+%       ceq             (Mx1 double) Restricciones de IGUALDAD (ceq = 0).
+%
+%   MAPEO DE RESTRICCIONES DE DESIGUALDAD (c):
+%       c(1)   : Suficiencia de combustible (con factor de seguridad).
+%       c(2)   : Distancia mínima para descenso (Geometría).
+%       c(3)   : Distancia máxima para descenso (Geometría).
+%       c(4-5) : Límites Tasa Ascenso/Descenso - Fase 1 (Ascenso).
+%       c(6-7) : Límites Tasa Ascenso/Descenso - Fase 3 (Ajuste).
+%       c(8-9) : Límites Tasa Ascenso/Descenso - Fase 5 (Descenso).
+%
+%   Ver también TRAYECTORIA.SIMULARPERFIL
+% 
 
 function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronterasFijas)
-    import Trayectoria.simularPerfil
 
-    % Desempaquetado (claridad)
-    distAscenso = X(1);
-    distDescenso = X(4);
-    velAscenso = X(5);
-    velDescenso = X(9);
-    hCrucero = X(10); 
+import Trayectoria.simularPerfil
+    
     fuelInicial = X(12);
     
     % --- 1. SIMULACIÓN ---
-
     resultados = simularPerfil(X(1:4), X(5:9), X(10:11), fuelInicial, ...
         parametrosFijos, fronterasFijas, Avion);
     
@@ -40,40 +58,61 @@ function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronteras
     c = [];
     idx = 1;
     
-    % A) Combustible suficiente
-    c(idx) = resultados.combustibleConsumido - parametrosFijos.seguridadFuel * fuelInicial;
+    % -----------------------------------------------------
+    % A) COMBUSTIBLE
+    % -----------------------------------------------------
+    % c(1): El combustible consumido supera al inicial (con margen de seguridad)
+    c(idx) = resultados.combustibleConsumido - fuelInicial / parametrosFijos.seguridadFuel;
     idx = idx + 1;
     
-    % B) Distancia Total (Mínima y Máxima requerida)
+    % -----------------------------------------------------
+    % B) GEOMETRÍA DE LA RUTA
+    % -----------------------------------------------------
     distanciaCalculada = sum(X(1:4));
-    % Que no sea más corta que la ruta
-    c(idx) = (parametrosFijos.distancia - fronterasFijas.x5Min) - distanciaCalculada;
-    idx = idx + 1;
-    % Que no sea más larga que la ruta (si aplica)
-    c(idx) = distanciaCalculada - (parametrosFijos.distancia + fronterasFijas.x5Max); 
-    idx = idx + 1;
-
-    % C) FÍSICA DE ASCENSO (Evita subidas verticales)
-    % Delta Altura Ascenso
-    deltaH_asc = hCrucero - parametrosFijos.h_origen;
     
-    % Tasa Max: deltaH * v - MaxRoC * dist <= 0
-    c(idx) = (deltaH_asc * velAscenso) - (fronterasFijas.maxTasaAscenso * distAscenso);
+    % c(2): La ruta calculada es demasiado corta (deja demasiado espacio para el descenso)
+    % Matemáticamente: DistanciaCalculada < (Total - MaxDescenso)
+    c(idx) = (parametrosFijos.distancia - fronterasFijas.x5Max) - distanciaCalculada;
     idx = idx + 1;
     
-    % Tasa Min: MinRoC * dist - deltaH * v <= 0
-    c(idx) = (fronterasFijas.minTasaAscenso * distAscenso) - (deltaH_asc * velAscenso);
+    % c(3): La ruta calculada es demasiado larga (no deja espacio para bajar)
+    % Matemáticamente: DistanciaCalculada > (Total - MinDescenso)
+    c(idx) = distanciaCalculada - (parametrosFijos.distancia - fronterasFijas.x5Min); 
     idx = idx + 1;
     
-    % D) FÍSICA DE DESCENSO
-    % Delta Altura Descenso
-    deltaH_des = hCrucero - parametrosFijos.h_destino;
+    % -----------------------------------------------------
+    % C) FÍSICAS (Velocidades Verticales)
+    % -----------------------------------------------------
+    % Definición de Deltas de Altura
+    Deltah1 = X(10) - parametrosFijos.h_origen;             % Altura ganada fase 1
+    Deltah2 = X(11) - X(10);                                % Altura ganada/perdida fase 3 (escalón)
+    Deltah3 = parametrosFijos.h_destino - X(11);            % Altura perdida fase 5 (descenso)
     
-    % Tasa Max Descenso
-    c(idx) = (deltaH_des * velDescenso) - (fronterasFijas.maxTasaDescenso * distDescenso);
-    idx = idx + 1;
+    % Cálculo trigonométrico exacto de Velocidad Vertical (Vv = Vtas * sin(gamma))
+    % Nota: X(1)=Dist1, X(3)=Dist3 (Ajuste), DistDescenso = Total - calculada
+    Vv1 = X(5) * sin(atan(Deltah1 / X(1))); 
+    Vv2 = X(7) * sin(atan(Deltah2 / X(3))); 
+    Vv3 = X(9) * sin(atan(Deltah3 / (parametrosFijos.distancia - distanciaCalculada))); 
     
-    % Tasa Min Descenso
-    c(idx) = (fronterasFijas.minTasaDescenso * distDescenso) - (deltaH_des * velDescenso);
+    velocidadesVerticales = [Vv1, Vv2, Vv3];
     
+    % BUCLE DE RESTRICCIONES FÍSICAS
+    % k=1 -> Ascenso Inicial
+    % k=2 -> Ajuste (Escalón)
+    % k=3 -> Descenso Final
+    
+    for k = 1:3
+        vActual = velocidadesVerticales(k);
+        
+        % Restricción de TECHO (Máximo Ascenso)
+        % Índices resultantes: c(4) para Fase1, c(6) para Fase3, c(8) para Fase5
+        c(idx) = vActual - fronterasFijas.maxTasaAscenso;
+        idx = idx + 1;
+        
+        % Restricción de SUELO (Máximo Descenso / Mínimo Ascenso negativo)
+        % IMPORTANTE: fronterasFijas.maxTasaDescenso debe ser NEGATIVO (ej. -15)
+        % Índices resultantes: c(5) para Fase1, c(7) para Fase3, c(9) para Fase5
+        c(idx) = fronterasFijas.maxTasaDescenso - vActual;
+        idx = idx + 1;
+    end
 end

@@ -18,6 +18,7 @@ classdef Avion < handle
         cD0Descenso
         k
         S
+        Cla
 
         % Parámetros de motor
         Tsl         %Empuje a nivel del mar
@@ -72,6 +73,8 @@ classdef Avion < handle
                 avion.k = parametros.k;
 
                 avion.S = parametros.S;
+
+                avion.Cla = parametros.Cla;
                 
                 % parametros del motor
                 avion.Tsl = parametros.Tsl;
