@@ -4,17 +4,24 @@
 %   - Figuras del frente de Pareto
 %   - Resumen del proceso
 %   - Todo se guarda en Resultados/
+%%
+% CONSTRUCCION DEL AVION Y FUNCIONAMIENTO DEL MAIN OKEY. COMPROBADO 100% 
+%%
+% 
+% 
 
 clc;
 clear;
 close all;
 
 import Core.evaluarVuelo
+%import Core.evaluarVueloTest
 addpath('Utils');
 
 %% 0. Control y setup de simulación
 
-aviones = ["BC300", "BC_300"]; % etc
+
+aviones = ["BC300"]; % etc
 heuristico = true; % genetico
 gradiente = false; 
 
@@ -71,10 +78,20 @@ for i = 1:length(aviones)
         min(avion.FWmax, avion.MTOW - avion.OEW - parametrosFijos.PL)];
 
     masterEval = @(X) evaluarVuelo(X, avion, parametrosFijos, fronterasFijas);
+    % masterEval = @(X) evaluarVueloTest(X, avion, parametrosFijos, fronterasFijas);
+    % Activar linea 77 para test. Ha pasado ok
     objFun = @(x) getOutput(masterEval, x); 
     nonlconFun = @(x) getConstraints(masterEval, x);
     
     fprintf("Carga de datos completada, comienza la optimización.\n")
+
+    %%
+
+    model = 'Turbofan_Model';
+    load_system(model);
+    %set_param(model,'SimulationCommand','update');
+    set_param(model,'FastRestart','off');
+
     %% 2.1. Algoritmo heuristico
 
     if control.heuristico
@@ -83,7 +100,6 @@ for i = 1:length(aviones)
             'UseParallel', true, ...
             'Display', 'iter');
         
-        % IMPORTANTE: nonlconFun va en el argumento 9
         [X_ga, F_ga, exitflag_ga, output_ga] = gamultiobj(objFun, ...
             control.nvars, [], [], [], [], lb, ub, nonlconFun, optionsGA);
             
@@ -97,6 +113,7 @@ for i = 1:length(aviones)
     
     %% 2.2. Algoritmo de gradiente
     if control.gradiente
+
         fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
         
         x0 = (lb + ub) / 2;
@@ -105,7 +122,7 @@ for i = 1:length(aviones)
         
         optionsGrad = optimoptions('fmincon', ...
             'Display', 'iter', ...
-            'Algorithm', 'sqp'); 
+            'Algorithm', 'sqp','UseParallel',true); 
             
         [X_grad, J_val, exitflag_grad, output_grad] = fmincon(funcionCosteEscalar, ...
             x0, [], [], [], [], lb, ub, [], optionsGrad);
@@ -129,6 +146,42 @@ fechaHora = datetime("now", "Format", "yyyyMMdd_HHmm");
 nombreArchivo = fullfile("Resultados", "Resultados_" + char(fechaHora) + ".mat");
 save(nombreArchivo, 'Resultados');
 
+%% 3. VISUALIZACIÓN DE DATOS EN CONSOLA
+    fprintf('\n======================================================\n');
+    fprintf(' RESUMEN DE RESULTADOS PARA: %s\n', avionActual);
+    fprintf('======================================================\n');
+    
+    if control.gradiente
+        fprintf('\n>>> RESULTADOS GRADIENTE (fmincon) <<<\n');
+        fprintf('  Exit Flag: %d (1 = Convergencia Exitosa)\n', exitflag_grad);
+        fprintf('  Iteraciones: %d\n', output_grad.iterations);
+        fprintf('------------------------------------------------------\n');
+        fprintf('  COSTO TOTAL (J = w1*f1 + w2*f2): %.6f\n', J_val);
+        fprintf('  OBJETIVOS [f1, f2]:              [%.4f,  %.4f]\n', F_grad(1), F_grad(2));
+        fprintf('------------------------------------------------------\n');
+        fprintf('  VARIABLES DE DISEÑO (X):\n');
+        % Imprimimos las 12 variables en dos filas para que se lea bien
+        fprintf('    x1-x6:  %.4f  %.4f  %.4f  %.4f  %.4f  %.4f\n', X_grad(1:6));
+        fprintf('    x7-x12: %.4f  %.4f  %.4f  %.4f  %.4f  %.4f\n', X_grad(7:12));
+        
+        % INTERPRETACIÓN PARA EL TEST ZDT1
+        if exist('MODO_TEST', 'var') && MODO_TEST
+            fprintf('\n  [ANÁLISIS TEST ZDT1]:\n');
+            fprintf('  Con w1=0.5 y w2=0.5, el óptimo teórico debe equilibrar f1 y f2.\n');
+            fprintf('  Si f1 está entre 0.20 y 0.30, el gradiente ha funcionado PERFECTO.\n');
+        end
+    end
+
+    if control.heuristico
+        fprintf('\n>>> RESULTADOS GENÉTICO (GAMULTIOBJ) <<<\n');
+        fprintf('  Puntos encontrados en Pareto: %d\n', size(F_ga, 1));
+        fprintf('  Rango f1 (min - max): %.4f - %.4f\n', min(F_ga(:,1)), max(F_ga(:,1)));
+        fprintf('  Rango f2 (min - max): %.4f - %.4f\n', min(F_ga(:,2)), max(F_ga(:,2)));
+        fprintf('  (Ver gráfica para distribución visual)\n');
+    end
+    fprintf('\n======================================================\n\n');
+
+
 
 %% 4. FUNCIONES AUXILIARES
 function f = getOutput(funHandle, x)
@@ -141,3 +194,11 @@ function [c, ceq] = getConstraints(funHandle, x)
     [~, c, ceq] = funHandle(x);
 end
 
+function J = sumaPonderada(x, funHandle, w1, w2)
+    % 1. Obtenemos el vector de objetivos [f1, f2] evaluando la función maestra
+    [f, ~, ~] = funHandle(x);
+    
+    % 2. Calculamos el escalar (suma ponderada)
+    % Importante: f(1) es tiempo (o equivalente ZDT1), f(2) es consumo
+    J = w1 * f(1) + w2 * f(2);
+end
