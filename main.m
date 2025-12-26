@@ -5,16 +5,20 @@ addpath('Utils');
 % CONTROL DE LA SIMULACIÓN - UNICA SECCIÓN A TOCAR
 aviones = ["BC300"]; 
 heuristico = true; 
-gradiente = false; 
+gradiente = true; 
 w1 = 0; % tiempo
 w2 = 1; % combustible 
-precisionRelEDO = 1e-5;
+precisionRelEDO = 1e-2;
 
 restriccionesGenerales = load("Data/restriccionesGenerales.mat");
 parametrosFijos = restriccionesGenerales.parametros;
 fronterasFijas = restriccionesGenerales.fronteras;
 control.nvars = size(parametrosFijos.xRef, 2);
-parametrosFijos.precisionRelEDO = 1e-5;
+parametrosFijos.precisionRelEDO = precisionRelEDO;
+control.heuristico = heuristico;
+control.gradiente = gradiente;
+control.w1 = w1;
+control.w2 = w2;
 
 %% 2. BUCLE PRINCIPAL DE OPTIMIZACIÓN
 for i = 1:length(aviones)
