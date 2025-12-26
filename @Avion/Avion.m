@@ -24,6 +24,8 @@ classdef Avion < handle
         Tsl         %Empuje a nivel del mar
         TSFCsl      %Consumo específico a nivel del mar
         nummotores  %Número de motores
+        Tmax
+
         % Parametros masicos
         OEW
         MTOW
@@ -80,6 +82,7 @@ classdef Avion < handle
                 avion.Tsl = parametros.Tsl;
                 avion.TSFCsl = parametros.TSFCsl;
                 avion.nummotores = parametros.nummotores;
+                avion.Tmax = parametros.Tmax;
 
                 % parametros masicos
                 avion.MTOW = parametros.MTOW;

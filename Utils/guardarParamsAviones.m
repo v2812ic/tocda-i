@@ -5,7 +5,7 @@
 nombreAvion = "BC300";
 
 % Parámetros aerodinámicos (adim)
-parametros.cD0Despegue = 0.042;
+parametros.cD0Despegue = 0.011;
 parametros.cD0Crucero = 0.011;
 parametros.cD0Descenso = 0.015;
 parametros.k = 0.043;
@@ -17,6 +17,7 @@ parametros.Cla = 6;
 parametros.Tsl = 120e3;
 parametros.TSFCsl = 1e-5;
 parametros.nummotores = 1;
+parametros.Tmax = 60000;
 
 
 % Parametros masicos (kg)
@@ -24,14 +25,14 @@ parametros.OEW = 10600;
 parametros.MTOW = 17622;
 
 % Restricciones
-fronteras.FWmax = 6400; % (kg)
-fronteras.techoDeVuelo = 13716; % (m)
+fronteras.FWmax = 9000; % (kg)
+fronteras.techoDeVuelo = 40000; % (m)
 fronteras.vMaxCrucero = 245; % todas las velocidades (m/s)   
-fronteras.vMinCrucero = 236;
-fronteras.vMaxDespegue = 72;
-fronteras.vMinDespegue = 62;
-fronteras.vMaxAproximacion = 67;
-fronteras.vMinAproximacion = 57;
+fronteras.vMinCrucero = 60;
+fronteras.vMaxDespegue = 245;
+fronteras.vMinDespegue = 60;
+fronteras.vMaxAproximacion = 245;
+fronteras.vMinAproximacion = 60;
 ruta = strcat("Data/datos_", nombreAvion, ".mat");
 
 save(ruta, 'parametros', 'fronteras');

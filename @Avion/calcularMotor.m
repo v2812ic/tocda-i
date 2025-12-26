@@ -1,19 +1,9 @@
-% Inputs:
-%   obj         (objeto) La instancia de la clase 'Avion' (inyectado)
-%   V           (scalar) Velocidad actual (m/s)
-%   h           (scalar) Altitud actual (m)
-%   T           (scalar) empuje deseado
-%
-% Outputs:
-%   m_dot       (scalar) Flujo de combustible (kg/s)
-
 
 function [dmdt,Restriccion] = calcularMotor(Avion, estado, T)
 %condiciones de vuelo
 Alt = estado.h;
 z = ISA(Alt); 
-Mach = estado.V / (340*sqrt(z)); %Cálculo del Mach de vuelo
-Thrust_Req = T/Avion.nummotores;  %Empuje requerido
+Mach = estado.V / (340*sqrt(z));
 
 Restriccion = 0;
 
@@ -28,17 +18,10 @@ Restriccion = 0;
 
 % Llamada a la función
 
-TSFC= (0.45+ 0.55*Mach) * sqrt(z);
-
-dmdt = T*TSFC*2.8327e-5*9.8;
+TSFC= (0.45+ 0.54*Mach) * sqrt(z);
+dmdt = max(0, T*TSFC/3600/9.8);
 
 end
-
-
-
-% ======= funciones auxiliares =======
-
-
 
 
 function [z,d] = ISA(h)
@@ -50,5 +33,4 @@ function [z,d] = ISA(h)
      		z = 216.65/288.15;
      		d = (22632.1/101325)*exp(-0.0001577*(h-11000));
         end
-
 end

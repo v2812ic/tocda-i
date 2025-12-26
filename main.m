@@ -1,204 +1,178 @@
-% Inputs: Ninguno 
-% Outputs:
-%   - Resultados de variables de optimización
-%   - Figuras del frente de Pareto
-%   - Resumen del proceso
-%   - Todo se guarda en Resultados/
-%%
-% CONSTRUCCION DEL AVION Y FUNCIONAMIENTO DEL MAIN OKEY. COMPROBADO 100% 
-%%
-% 
-% 
-
-clc;
-clear;
-close all;
-
+%% 1. CONFIGURACIÓN INICIAL Y CARGA DE DATOS
 import Core.evaluarVuelo
-%import Core.evaluarVueloTest
 addpath('Utils');
 
-%% 0. Control y setup de simulación
-
-
-aviones = ["BC300"]; % etc
-heuristico = true; % genetico
+% CONTROL DE LA SIMULACIÓN - UNICA SECCIÓN A TOCAR
+aviones = ["BC300"]; 
+heuristico = true; 
 gradiente = false; 
+w1 = 0; % tiempo
+w2 = 1; % combustible 
+precisionRelEDO = 1e-5;
 
-w1 = 0.5; % 50% importancia al tiempo
-w2 = 0.5; % 50% importancia al consumo
-
-nvars = 12;
-
-%% 1. Carga de datos del problema
-
-% Construye el controlador de opciones de la simulación
-control.aviones = aviones;
-control.heuristico = heuristico;
-control.gradiente = gradiente;
-control.w1 = w1;
-control.w2 = w2;
-control.nvars = nvars;
-
-% Carga las restricciones generales (distancias de aeropuertos) y las
-% fronteras de las restricciones (máximos y mínimos)
 restriccionesGenerales = load("Data/restriccionesGenerales.mat");
 parametrosFijos = restriccionesGenerales.parametros;
 fronterasFijas = restriccionesGenerales.fronteras;
+control.nvars = size(parametrosFijos.xRef, 2);
+parametrosFijos.precisionRelEDO = 1e-5;
 
+%% 2. BUCLE PRINCIPAL DE OPTIMIZACIÓN
 for i = 1:length(aviones)
     avionActual = aviones(i);
-
-    % Muestra en pantalla de lo que está sucediendo
     fprintf("------------------------------------------------\n");
     fprintf(strcat("Comienza la optimización del avión ", avionActual, "\n\n"));
-    % Inicialización del objeto del avión y de las variables de decisión
+    
+    % Inicialización del modelo de avión
     try
         avion = Avion(avionActual);
     catch ME
         fprintf(strcat("Deteniendo simulación para avión ", avionActual, ".\n"));
         fprintf(strcat(ME.message, "\n\n"));
-        continue; % salta de avión y pasa al siguiente
+        continue; 
     end
-
+    
+    % Validación de carga útil (Payload)
     if avion.MTOW - avion.OEW - parametrosFijos.PL <= 0
         fprintf('Se aborta la optimización con avión %s porque no puede cargar tanto payload.\n\n', avionActual);
         continue
     end
-
-    % Restricciones lineales de las variables de decision
-    lb = [min(fronterasFijas.x1Min, parametrosFijos.distancia), min(fronterasFijas.x2Min, parametrosFijos.distancia), min(fronterasFijas.x3Min, parametrosFijos.distancia), ...
-        min(fronterasFijas.x4Min, parametrosFijos.distancia), avion.vMinDespegue, avion.vMinCrucero, ...
-        avion.vMinCrucero, avion.vMinCrucero, avion.vMinAproximacion, ...
-        fronterasFijas.hCruceroMin, fronterasFijas.hCruceroMin,0];
-    ub = [min(fronterasFijas.x1Max, parametrosFijos.distancia), min(fronterasFijas.x1Max, parametrosFijos.distancia), min(fronterasFijas.x1Max, parametrosFijos.distancia), ...
-        min(fronterasFijas.x1Max, parametrosFijos.distancia), avion.vMaxDespegue, avion.vMaxCrucero, ...
-        avion.vMaxCrucero, avion.vMaxCrucero, avion.vMaxAproximacion, ...
-        avion.techoDeVuelo, avion.techoDeVuelo, ...
-        min(avion.FWmax, avion.MTOW - avion.OEW - parametrosFijos.PL)];
-
-    masterEval = @(X) evaluarVuelo(X, avion, parametrosFijos, fronterasFijas);
-    % masterEval = @(X) evaluarVueloTest(X, avion, parametrosFijos, fronterasFijas);
-    % Activar linea 77 para test. Ha pasado ok
-    objFun = @(x) getOutput(masterEval, x); 
-    nonlconFun = @(x) getConstraints(masterEval, x);
     
+    %% 3. DEFINICIÓN DE LÍMITES Y RESTRICCIONES LINEALES
+    % Cálculo de distancias máximas basadas en aerodinámica
+    fronterasFijas.x1Max = avion.techoDeVuelo/tan(fronterasFijas.minTasaAscenso);
+    fronterasFijas.x3Max = -avion.techoDeVuelo/tan(fronterasFijas.minTasaDescenso);
+    
+    % Definición de Lower y Upper Bounds (lb, ub)
+    lb = [min(fronterasFijas.x1Min, parametrosFijos.distancia), min(fronterasFijas.x2Min, parametrosFijos.distancia), avion.vMinDespegue, avion.vMinCrucero, ...
+        avion.vMinAproximacion, fronterasFijas.hCruceroMin, fronterasFijas.hCruceroMin,...
+        0];
+    ub = [min(fronterasFijas.x1Max, parametrosFijos.distancia), min(fronterasFijas.x2Max, parametrosFijos.distancia), avion.vMaxDespegue, avion.vMaxCrucero, ...
+        avion.vMaxAproximacion, avion.techoDeVuelo, avion.techoDeVuelo, ...
+        min(avion.FWmax, avion.MTOW - avion.OEW - parametrosFijos.PL)];
+    
+    % Preparación de variables normalizadas (Xref)
+    Xref = parametrosFijos.xRef;
+    lb_s = lb ./ Xref;
+    ub_s = ub ./ Xref;
+    
+    masterEval = @(X) evaluarVuelo(X, avion, parametrosFijos, fronterasFijas);
+    
+    % Construcción de matrices de restricciones lineales A*x <= b (Escaladas)
+    D  = parametrosFijos.distancia;
+    A = zeros(2, control.nvars);
+    b = zeros(2, 1);
+    A(1, 1:2) = -1; b(1) = -(D - fronterasFijas.x3Max);
+    A(2, 1:2) =  1; b(2) =  (D - fronterasFijas.x3Min);
+    A_s = A * diag(Xref);
+    b_s = b;
+
     fprintf("Carga de datos completada, comienza la optimización.\n")
 
-    %%
-
-    model = 'Turbofan_Model';
-    load_system(model);
-    %set_param(model,'SimulationCommand','update');
-    set_param(model,'FastRestart','off');
-
-    %% 2.1. Algoritmo heuristico
-
+    %% 4. OPTIMIZACIÓN HEURÍSTICA (GAMULTIOBJ)
     if control.heuristico
+        tic;
         fprintf("Comienza la optimización por algoritmo genético.\n")
+        
+        objFun_s = @(xs) getOutput(masterEval, xs .* Xref); 
+        nonlconFun_s = @(xs) getConstraints(masterEval, xs .* Xref);
+        
         optionsGA = optimoptions('gamultiobj', ...
             'UseParallel', true, ...
             'Display', 'iter');
         
-        [X_ga, F_ga, exitflag_ga, output_ga] = gamultiobj(objFun, ...
-            control.nvars, [], [], [], [], lb, ub, nonlconFun, optionsGA);
+        [Xs_ga, F_ga, exitflag_ga, output_ga] = gamultiobj(objFun_s, ...
+            control.nvars, A_s, b_s, [], [], lb_s, ub_s, nonlconFun_s, optionsGA);
             
+        X_ga = Xs_ga .* Xref; % Des-escalado de resultados
         Resultados.(avionActual).ga.X = X_ga;
         Resultados.(avionActual).ga.F = F_ga;
         Resultados.(avionActual).ga.output = output_ga;
         
         if exist('plotPareto','file'), plotPareto(F_ga, avionActual); end
-        fprintf("   Optimización heurística completada.\n\n")  
+        
+        tiempo = toc;
+        fprintf("   Optimización heurística completada. Tiempo de ejecución GA: %.4f s.\n\n", tiempo);
     end
     
-    %% 2.2. Algoritmo de gradiente
+    %% 5. OPTIMIZACIÓN POR GRADIENTE (FMINCON)
     if control.gradiente
-
+        tic;
         fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
         
-        x0 = (lb + ub) / 2;
-
-        funcionCosteEscalar = @(x) sumaPonderada(x, masterEval, w1, w2);
+        x0 = [180000, 2640000, 240, 240, 65, 13000, 13000, 6000];
+        xs0 = x0 ./ Xref;
         
+        funcionCosteEscalar_s = @(xs) sumaPonderada(xs .* Xref, masterEval, control.w1, control.w2);
+        nonlconFun_s = @(xs) getConstraints(masterEval, xs .* Xref);
+       
         optionsGrad = optimoptions('fmincon', ...
             'Display', 'iter', ...
-            'Algorithm', 'sqp','UseParallel',true); 
+            'UseParallel', true, ...
+            'MaxFunctionEvaluations', Inf, ...
+            'MaxIterations', Inf, ...
+            'OptimalityTolerance', 1e-8, ...
+            'StepTolerance', 1e-8, ...
+            'ConstraintTolerance', 1e-8, ...
+            'FiniteDifferenceType', 'central');
             
-        [X_grad, J_val, exitflag_grad, output_grad] = fmincon(funcionCosteEscalar, ...
-            x0, [], [], [], [], lb, ub, [], optionsGrad);
+        [xs_opt, J_val, exitflag_grad, output_grad] = fmincon(funcionCosteEscalar_s, ...
+            xs0, A_s, b_s, [], [], lb_s, ub_s, nonlconFun_s, optionsGrad);
             
+        X_grad = xs_opt .* Xref;
         F_grad = masterEval(X_grad);
         
         Resultados.(avionActual).grad.X = X_grad;
         Resultados.(avionActual).grad.F = F_grad; 
         Resultados.(avionActual).grad.J = J_val;
         Resultados.(avionActual).grad.output = output_grad;
+        plotFlight(X_grad, F_grad, avion, parametrosFijos);
         
-        fprintf("   Optimización gradiente completada.\n\n");
+        tiempo = toc;
+        fprintf("   Optimización gradiente completada. Tiempo de ejecución Grad: %.4f s.\n\n", tiempo);
     end
 end
     
-
-%% 3. GUARDADO DE RESULTADOS
-
+%% 6. GUARDADO DE ARCHIVOS Y SALIDA POR CONSOLA
 fprintf(strcat("\nOptimización completada, guardando resultados.\n\n"));
 fechaHora = datetime("now", "Format", "yyyyMMdd_HHmm");
 nombreArchivo = fullfile("Resultados", "Resultados_" + char(fechaHora) + ".mat");
 save(nombreArchivo, 'Resultados');
 
-%% 3. VISUALIZACIÓN DE DATOS EN CONSOLA
-    fprintf('\n======================================================\n');
-    fprintf(' RESUMEN DE RESULTADOS PARA: %s\n', avionActual);
-    fprintf('======================================================\n');
-    
-    if control.gradiente
-        fprintf('\n>>> RESULTADOS GRADIENTE (fmincon) <<<\n');
-        fprintf('  Exit Flag: %d (1 = Convergencia Exitosa)\n', exitflag_grad);
-        fprintf('  Iteraciones: %d\n', output_grad.iterations);
-        fprintf('------------------------------------------------------\n');
-        fprintf('  COSTO TOTAL (J = w1*f1 + w2*f2): %.6f\n', J_val);
-        fprintf('  OBJETIVOS [f1, f2]:              [%.4f,  %.4f]\n', F_grad(1), F_grad(2));
-        fprintf('------------------------------------------------------\n');
-        fprintf('  VARIABLES DE DISEÑO (X):\n');
-        % Imprimimos las 12 variables en dos filas para que se lea bien
-        fprintf('    x1-x6:  %.4f  %.4f  %.4f  %.4f  %.4f  %.4f\n', X_grad(1:6));
-        fprintf('    x7-x12: %.4f  %.4f  %.4f  %.4f  %.4f  %.4f\n', X_grad(7:12));
-        
-        % INTERPRETACIÓN PARA EL TEST ZDT1
-        if exist('MODO_TEST', 'var') && MODO_TEST
-            fprintf('\n  [ANÁLISIS TEST ZDT1]:\n');
-            fprintf('  Con w1=0.5 y w2=0.5, el óptimo teórico debe equilibrar f1 y f2.\n');
-            fprintf('  Si f1 está entre 0.20 y 0.30, el gradiente ha funcionado PERFECTO.\n');
-        end
-    end
+fprintf('\n======================================================\n');
+fprintf(' RESUMEN DE RESULTADOS PARA: %s\n', avionActual);
+fprintf('======================================================\n');
 
-    if control.heuristico
-        fprintf('\n>>> RESULTADOS GENÉTICO (GAMULTIOBJ) <<<\n');
-        fprintf('  Puntos encontrados en Pareto: %d\n', size(F_ga, 1));
-        fprintf('  Rango f1 (min - max): %.4f - %.4f\n', min(F_ga(:,1)), max(F_ga(:,1)));
-        fprintf('  Rango f2 (min - max): %.4f - %.4f\n', min(F_ga(:,2)), max(F_ga(:,2)));
-        fprintf('  (Ver gráfica para distribución visual)\n');
-    end
-    fprintf('\n======================================================\n\n');
+if control.gradiente
+    fprintf('\n>>> RESULTADOS GRADIENTE (fmincon) <<<\n');
+    fprintf('  Exit Flag: %d (1 = Convergencia Exitosa)\n', exitflag_grad);
+    fprintf('  Iteraciones: %d\n', output_grad.iterations);
+    fprintf('------------------------------------------------------\n');
+    fprintf('  COSTO TOTAL (J = w1*f1 + w2*f2): %.6f\n', J_val);
+    fprintf('  OBJETIVOS [f1, f2]:              [%.4f,  %.4f]\n', F_grad(1), F_grad(2));
+    fprintf('------------------------------------------------------\n');
+    fprintf('  VARIABLES DE DISEÑO (X):\n');
+    fprintf('    x1-x4:  %.4f  %.4f  %.4f  %.4f\n', X_grad(1:4));
+    fprintf('    x5-x8: %.4f  %.4f  %.4f  %.4f\n', X_grad(5:8));
+end
 
+if control.heuristico
+    fprintf('\n>>> RESULTADOS GENÉTICO (GAMULTIOBJ) <<<\n');
+    fprintf('  Puntos encontrados en Pareto: %d\n', size(F_ga, 1));
+    fprintf('  Rango f1 (min - max): %.4f - %.4f\n', min(F_ga(:,1)), max(F_ga(:,1)));
+    fprintf('  Rango f2 (min - max): %.4f - %.4f\n', min(F_ga(:,2)), max(F_ga(:,2)));
+end
+fprintf('\n======================================================\n\n');
 
-
-%% 4. FUNCIONES AUXILIARES
+%% FUNCIONES AUXILIARES
 function f = getOutput(funHandle, x)
-    % Llama a evaluarVuelo y se queda solo con el primer output (objetivos)
     [f, ~, ~] = funHandle(x);
 end
 
 function [c, ceq] = getConstraints(funHandle, x)
-    % Llama a evaluarVuelo y se queda con el segundo y tercero (restricciones)
     [~, c, ceq] = funHandle(x);
 end
 
 function J = sumaPonderada(x, funHandle, w1, w2)
-    % 1. Obtenemos el vector de objetivos [f1, f2] evaluando la función maestra
     [f, ~, ~] = funHandle(x);
-    
-    % 2. Calculamos el escalar (suma ponderada)
-    % Importante: f(1) es tiempo (o equivalente ZDT1), f(2) es consumo
     J = w1 * f(1) + w2 * f(2);
 end

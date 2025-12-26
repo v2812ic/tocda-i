@@ -11,17 +11,6 @@
 
 %function [L, D, T] = calcularAeroyFuerzas(avion)
 
-% ME ESTOY RAYANDO CON CÓMO IMPLEMENTAR EL CÁLCULO DE alpha. Revisar que
-% creo que está mal configurada esta función con respecto a lo que se
-% declara en la clase
-
-%L = pi;
-%cL = pi;
-
-% distinguir entre fases según el estado
-%D = avion.cd0 + avion.k*(cL^2);
-
-%end
 
 
 function [empuje, alpha, exitflag] = calcularAeroyFuerzas(v, h, W, gamma, avion, fase)
@@ -32,9 +21,6 @@ function [empuje, alpha, exitflag] = calcularAeroyFuerzas(v, h, W, gamma, avion,
 % alpha  : Ángulo de ataque (rad)
 % exitflag : Estado de convergencia de fsolve
 
-% Esto se debería meter en la clase del avión, de todas maneras
-
-tic;
 
     %% Selección de CD0 según fase
     if isnan(v) || isnan(h) || isnan(W)
@@ -46,9 +32,9 @@ tic;
     switch fase
         case 1
             CD0 = avion.cD0Despegue;
-        case {2,3,4}
+        case 2
             CD0 = avion.cD0Crucero;
-        case 5
+        case 3
             CD0 = avion.cD0Descenso;
         otherwise
             warning('Fase no reconocida, usando CD0 de crucero para no explotar, pero para ');
@@ -72,7 +58,7 @@ tic;
 
     options = optimoptions('fsolve', ...
         'Display','off', ...
-        'FunctionTolerance',1e-10);
+        'FunctionTolerance',1e-5);
 
     [x,~,exitflag] = fsolve(@equations, x0, options);
     
@@ -84,7 +70,7 @@ tic;
         alpha = x(1);
         T     = x(2);
 
-        CL = Cla * alpha;
+        CL = Cla * alpha + 0.2; % CL0, cambiar en cada avión
         CD = CD0 + k * CL^2;
 
         L = 0.5 * rho * v^2 * S * CL;
@@ -93,8 +79,5 @@ tic;
         F(1) = T - D - W * sin(gamma);
         F(2) = W * cos(gamma) - L - T * alpha;
     end
-
-tiempo = toc;
-%fprintf('Tiempo de ejecución calcular Aero: %.4f segundos\n', tiempo);
 end
 

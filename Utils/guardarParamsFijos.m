@@ -2,28 +2,29 @@
 
 parametros.h_origen = 0; % (m)
 parametros.h_destino = 0;
-parametros.distancia = 1e5;
+parametros.distancia = 4e6;
 
 parametros.PL = 1e2;
 parametros.seguridadFuel = 1.1; %> 1!!
 
-fronteras.maxTasaAscenso = 0.5; % (rad)
-fronteras.maxTasaDescenso = -0.5; % Negativo !!
+parametros.xRef = [1e5, 1e6, 1e2, 1e2, 1e2, 1e4, 1e4, 1e4];
 
-fronteras.x1Max = 1e5; % (m)
-fronteras.x2Max = 1e5;
-fronteras.x3Max = 1e5;
-fronteras.x4Max = 1e5;
 
-fronteras.x1Min = 1e2;
-fronteras.x2Min = 1e2;
-fronteras.x3Min = 1e2;
-fronteras.x4Min = 1e2;
+fronteras.maxTasaAscenso = deg2rad(8);     % Angulos máximos de ascenso y descenso(deg)
+fronteras.minTasaAscenso = deg2rad(3);
+fronteras.minTasaDescenso = -deg2rad(3);
+fronteras.maxTasaDescenso = -deg2rad(8);  
 
-fronteras.x5Max = 1e5;
-fronteras.x5Min = 1e2;
+fronteras.hCruceroMin = 8e3;
 
-fronteras.hCruceroMin = 1e3;
+fronteras.x1Max = parametros.distancia; % (m)
+fronteras.x2Max = parametros.distancia;
+
+fronteras.x1Min = fronteras.hCruceroMin/tan(fronteras.maxTasaAscenso);
+fronteras.x2Min = 0;
+
+fronteras.x3Max = parametros.distancia;
+fronteras.x3Min = -fronteras.hCruceroMin/tan(fronteras.maxTasaDescenso);
 
 ruta = fullfile('Data/restriccionesGenerales.mat');
 

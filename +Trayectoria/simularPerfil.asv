@@ -1,0 +1,79 @@
+function Resultado = simularPerfil(DistIn, vel, altitud, comb, Param, Avion)
+    % 1. Reconstrucción de distancias (5 fases)
+    Dist = zeros(1, 5);
+    Dist(1:4) = DistIn;
+    Dist(5) = Param.distancia - sum(DistIn); % Ya viene capada de la funcion anterior
+    
+    % 2. Configuración de altitudes y ángulos (Gamma)
+    TOW = Avion.OEW + Param.PL + comb;
+    h_inicio = [Param.h_origen, altitud(1), altitud(1), altitud(2), altitud(2)];
+    h_final  = [altitud(1), altitud(1), altitud(2), altitud(2), Param.h_destino];
+    
+    gamma_f = zeros(1, 5);
+    for f = 1:5
+        gamma_f(f) = atan((h_final(f) - h_inicio(f)) / Dist(f));
+    end
+
+    % 3. CÁLCULO ALGEBRAICO DEL TIEMPO (Tu observación)
+    % t = Dist / V_horizontal
+    V_horiz = vel .* cos(gamma_f);
+    t_fases = Dist ./ V_horiz; % no habrán divisiones por 0 porque hay un límite de ángulo de asiento de velocidad
+    t_acumulado = [0, cumsum(t_fases)];
+    tiempoTotalMision = t_acumulado(end);
+
+    % 4. INTEGRACIÓN DEL COMBUSTIBLE
+    % Estado y: [combustible_consumido] -> Solo necesitamos integrar una variable
+    y0 = 0; 
+    %options = odeset('RelTol', 1e-2);
+
+    %try
+        % Integramos desde t=0 hasta el tiempo total calculado
+        [t_out, y_out] = ode45(@(t, y) odefun_solo_combustible(t, y, t_acumulado, vel, gamma_f, h_inicio, Avion, TOW), ...
+                               [0, tiempoTotalMision], y0);
+        
+        Resultado.tiempoTotal = tiempoTotalMision;
+        Resultado.combustibleConsumido = y_out();
+        Resultado.violacionRestricciones = 0;
+        
+    % catch
+    %     Resultado.tiempoTotal = tiempoTotalMision;
+    %     Resultado.combustibleConsumido = 1e10; % Penalización
+    %     Resultado.violacionRestricciones = 1;
+    % end
+end
+
+% --- Función de la derivada del combustible ---
+function dmc_dt = odefun_solo_combustible(t, mc, t_acum, vel, gamma_f, h_ini, Avion, TOW)
+    % mc es el combustible consumido hasta el momento t
+    peso_actual_N = (TOW - mc) * 9.81;
+
+    % Determinar en qué fase estamos según el TIEMPO actual
+    fase = find(t <= t_acum(2:end), 1, 'first');
+   
+    % if isempty(fase), fase = 5; elseif fase < 1, fase = 1; end
+
+    % Recuperar condiciones de esa fase
+    v = vel(fase);
+    gamma = gamma_f(fase);
+    
+    % Altitud actual (también lineal respecto al tiempo en cada fase)
+    % h = h_inicial + V_vertical * (tiempo_transcurrido_en_fase);
+    t_en_fase = t - t_acum(fase);
+    h_actual = h_ini(fase) + v * sin(gamma) * t_en_fase;
+
+    % 1. Empuje necesario
+    [T, ~, exitflag] = calcularAeroyFuerzas(v, h_actual, peso_actual_N, gamma, Avion, fase);
+    
+    if exitflag <= 0 || isnan(T)
+        error('Error física');
+    end
+
+    % 2. Consumo instantáneo (kg/s)
+    estado.h = h_actual;
+    estado.V = v;
+    [dm_dt, restr] = calcularMotor(Avion, estado, T);
+    
+    if restr == 1, error('Error motor'); end
+    
+    dmc_dt = dm_dt;
+end
