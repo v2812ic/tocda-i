@@ -4,7 +4,7 @@ addpath('Utils');
 
 % CONTROL DE LA SIMULACIÓN - UNICA SECCIÓN A TOCAR
 aviones = ["BC300"]; 
-heuristico = true; 
+heuristico = false; 
 gradiente = true; 
 w1 = 0; % tiempo
 w2 = 1; % combustible 

@@ -8,7 +8,7 @@ function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronteras
         parametrosFijos, Avion);
     
     % --- 2. OBJETIVOS ---
-    objetivos = [resultados.tiempoTotal; resultados.combustibleConsumido];
+    objetivos = [resultados.tiempoTotal; resultados.combustibleConsumido/parametrosFijos.PL];
     
     % --- 3. RESTRICCIONES DE IGUALDAD ---
     ceq = resultados.violacionRestricciones;
