@@ -19,7 +19,9 @@ Restriccion = 0;
 % Llamada a la función
 
 TSFC= (0.45+ 0.54*Mach) * sqrt(z);
+
 dmdt = max(0, T*TSFC/3600/9.8);
+
 
 end
 
