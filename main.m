@@ -2,9 +2,10 @@
 import Core.evaluarVuelo
 addpath('Utils');
 
+
 % CONTROL DE LA SIMULACIÓN - UNICA SECCIÓN A TOCAR
 aviones = ["BC300"]; 
-heuristico = false; 
+heuristico = true; 
 gradiente = true; 
 w1 = 0; % tiempo
 w2 = 1; % combustible 
@@ -180,3 +181,4 @@ function J = sumaPonderada(x, funHandle, w1, w2)
     [f, ~, ~] = funHandle(x);
     J = w1 * f(1) + w2 * f(2);
 end
+
