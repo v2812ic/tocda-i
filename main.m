@@ -5,7 +5,7 @@ addpath('Utils');
 
 % CONTROL DE LA SIMULACIÓN - UNICA SECCIÓN A TOCAR
 aviones = ["BC300"]; 
-heuristico = true; 
+heuristico = false; 
 gradiente = true; 
 w1 = 0; % tiempo
 w2 = 1; % combustible 
@@ -104,7 +104,7 @@ for i = 1:length(aviones)
         tic;
         fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
         
-        x0 = [180000, 2640000, 240, 240, 65, 13000, 13000, 6000];
+        x0 = [180000, 3600000, 240, 240, 65, 13000, 13000, 6000];
         xs0 = x0 ./ Xref;
         
         funcionCosteEscalar_s = @(xs) sumaPonderada(xs .* Xref, masterEval, control.w1, control.w2);
