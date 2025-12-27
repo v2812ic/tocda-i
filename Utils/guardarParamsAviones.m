@@ -14,9 +14,21 @@ parametros.S = 122.6;
 parametros.Cla = 6;
 
 % Parámetros de motor
+E=120e3;
+T4t_max = 1750;
+pi_c = 30;
+parametros.BPR = 11;
+pi_f = 1.4;
+[alpha_4, alpha_45, A_8, A_18] = Calculo_parametros_motor(E,T4t_max,pi_c,parametros.BPR,pi_f);
+
+parametros.alpha_4 = alpha_4;
+parametros.alpha_45 = alpha_45;
+parametros.A_8 = A_8;
+parametros.A_18 = A_18;
+
 parametros.Tsl = 120e3;
 parametros.TSFCsl = 1e-5;
-parametros.nummotores = 1;
+parametros.nummotores = 2;
 parametros.Tmax = 60000;
 
 
@@ -26,7 +38,7 @@ parametros.MTOW = 17622;
 
 % Restricciones
 fronteras.FWmax = 9000; % (kg)
-fronteras.techoDeVuelo = 40000; % (m)
+fronteras.techoDeVuelo = 13716; % (m)
 fronteras.vMaxCrucero = 245; % todas las velocidades (m/s)   
 fronteras.vMinCrucero = 60;
 fronteras.vMaxDespegue = 245;

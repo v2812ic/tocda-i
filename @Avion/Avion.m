@@ -21,10 +21,15 @@ classdef Avion < handle
         Cla
 
         % Parámetros de motor
-        Tsl         %Empuje a nivel del mar
-        TSFCsl      %Consumo específico a nivel del mar
+        %Tsl         %Empuje a nivel del mar
+        %TSFCsl      %Consumo específico a nivel del mar
         nummotores  %Número de motores
-        Tmax
+        %Tmax
+        alpha_4
+        alpha_45
+        A_8
+        A_18
+        BPR
 
         % Parametros masicos
         OEW
@@ -79,11 +84,17 @@ classdef Avion < handle
                 avion.Cla = parametros.Cla;
                 
                 % parametros del motor
-                avion.Tsl = parametros.Tsl;
-                avion.TSFCsl = parametros.TSFCsl;
+                %avion.Tsl = parametros.Tsl;
+                %avion.TSFCsl = parametros.TSFCsl;
                 avion.nummotores = parametros.nummotores;
-                avion.Tmax = parametros.Tmax;
-
+                %avion.Tmax = parametros.Tmax;
+                
+                avion.alpha_4 = parametros.alpha_4;
+                avion.alpha_45 = parametros.alpha_45;
+                avion.A_8 = parametros.A_8;
+                avion.A_18 = parametros.A_18;
+                avion.BPR = parametros.BPR;
+                
                 % parametros masicos
                 avion.MTOW = parametros.MTOW;
                 avion.OEW = parametros.OEW;
