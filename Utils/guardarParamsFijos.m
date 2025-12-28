@@ -4,7 +4,7 @@ parametros.h_origen = 0; % (m)
 parametros.h_destino = 0;
 parametros.distancia = 4e6;
 
-parametros.PL = 1e2;
+parametros.PL = 5e3;
 parametros.seguridadFuel = 1.1; %> 1!!
 
 parametros.xRef = [1e5, 1e6, 1e2, 1e2, 1e2, 1e4, 1e4, 1e4];

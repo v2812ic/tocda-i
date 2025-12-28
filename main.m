@@ -56,6 +56,7 @@ for i = 1:length(aviones)
         min(avion.FWmax, avion.MTOW - avion.OEW - parametrosFijos.PL)];
     
     % Preparación de variables normalizadas (Xref)
+
     Xref = parametrosFijos.xRef;
     lb_s = lb ./ Xref;
     ub_s = ub ./ Xref;
@@ -118,9 +119,10 @@ for i = 1:length(aviones)
             'OptimalityTolerance', 1e-8, ...
             'StepTolerance', 1e-8, ...
             'ConstraintTolerance', 1e-8, ...
-            'FiniteDifferenceType', 'central');
+            'FiniteDifferenceType', 'central', ...
+            'Algorithm','interior-point');
             
-        [xs_opt, J_val, exitflag_grad, output_grad] = fmincon(funcionCosteEscalar_s, ...
+        [xs_opt, J_val, exitflag_grad, output_grad, lambda] = fmincon(funcionCosteEscalar_s, ...
             xs0, A_s, b_s, [], [], lb_s, ub_s, nonlconFun_s, optionsGrad);
             
         X_grad = xs_opt .* Xref;
@@ -130,7 +132,41 @@ for i = 1:length(aviones)
         Resultados.(avionActual).grad.F = F_grad; 
         Resultados.(avionActual).grad.J = J_val;
         Resultados.(avionActual).grad.output = output_grad;
+        F_grad(2)=F_grad(2)*parametrosFijos.PL;
         plotFlight(X_grad, F_grad, avion, parametrosFijos);
+        
+        %Que restricciones están activas
+        %EnKKT si un multiplicador es mayor que 0, la restricción esta
+        %activa
+        tol = 1e-6;
+
+        active_bounds_lower = find(lambda.lower > tol);
+        active_bounds_upper = find(lambda.upper > tol);
+        
+        active_ineq_nonlin = find(lambda.ineqnonlin > tol);
+        active_ineq_lin    = find(lambda.ineqlin > tol);
+
+        %Análisis de sensibilidad de las variables
+        eps = 1e-3;            % perturbación de la variable (0.1% relativo)
+        dx  = eps*abs(xs_opt); 
+
+        Deltaf_plus = zeros(control.nvars,2);
+        Deltaf_minus = zeros(control.nvars,2);
+
+        for i = 1:control.nvars
+
+            xp = xs_opt; xp(i) = xp(i) + dx(i);
+            xm = xs_opt; xm(i) = xm(i) - dx(i);
+            
+            fp = masterEval(xp .* Xref);
+            fp(2) = fo(2)*parametrosFijos.PL;
+            fm = masterEval(xm .* Xref);
+            fm(2)=fm(2)*parametrosFijos.PL;
+            
+            Deltaf_plus(i,:)  = fp - F_grad;
+            Deltaf_minus(i,:) = fm - F_grad;
+
+        end
         
         tiempo = toc;
         fprintf("   Optimización gradiente completada. Tiempo de ejecución Grad: %.4f s.\n\n", tiempo);
