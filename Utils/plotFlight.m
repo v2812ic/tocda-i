@@ -61,7 +61,7 @@ function plotFlight(x, objetivos, avion, parametrosFijos)
     ylabel('Altitud ($m$)', 'Interpreter', 'latex', 'FontSize', 12, 'FontWeight', 'bold');
     
     % Título con información clave
-    title_str = sprintf('\\bf Trayectoria: %s \\rm\nTiempo: %.1f min  |  Fuel cargado: %.1f kg', ...
+    title_str = sprintf('\\bf Trayectoria: %s \\rm\nTiempo: %.1f min  |  Fuel: %.1f kg', ...
         avion.nombreAvion, objetivos(1)/60, objetivos(2));
     title(title_str, 'FontSize', 14, 'Interpreter', 'tex');
     
