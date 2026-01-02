@@ -135,11 +135,12 @@ for i = 1:length(aviones)
             'StepTolerance', 1e-8, ...
             'ConstraintTolerance', 1e-8, ...
             'FiniteDifferenceType', 'central', ...
-            'Algorithm','interior-point');
+            'Algorithm','sqp');
            
         [xs_opt, J_val, exitflag_grad, output_grad, lambda, grad, hessiano] = fmincon(funcionCosteEscalar_s, ...
             xs0, A_s, b_s, [], [], lb_s, ub_s, nonlconFun_s, optionsGrad);
             
+     
         X_grad = xs_opt .* Xref;
         F_grad = masterEval(X_grad);
         
