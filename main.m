@@ -117,7 +117,9 @@ for i = 1:length(aviones)
         tic;
         fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
         
-        x0 = [60000, 3600000, 240, 150, 65, 13000, 13000, 1000];
+
+        x0 = [200000, 3600000, 150, 170, 90, 12000, 12000, 4500]; % Este punto es factible
+
         xs0 = x0 ./ Xref;
         %Compruebo que x0 no incumple con las límites
         idx_lb = find(x0 < lb);
@@ -135,12 +137,12 @@ for i = 1:length(aviones)
             'StepTolerance', 1e-8, ...
             'ConstraintTolerance', 1e-8, ...
             'FiniteDifferenceType', 'central', ...
-            'HessianApproximation','finite-difference', ...
             'Algorithm','sqp');
-            
+           
         [xs_opt, J_val, exitflag_grad, output_grad, lambda, grad, hessiano] = fmincon(funcionCosteEscalar_s, ...
             xs0, A_s, b_s, [], [], lb_s, ub_s, nonlconFun_s, optionsGrad);
             
+     
         X_grad = xs_opt .* Xref;
         F_grad = masterEval(X_grad);
         
@@ -219,6 +221,8 @@ if control.heuristico
     fprintf('  Rango f2 (min - max): %.4f - %.4f\n', min(F_ga(:,2)), max(F_ga(:,2)));
 end
 fprintf('\n======================================================\n\n');
+fprintf('  Numero de condición del hessiano: %.4f\n', cond(hessiano));
+fprintf('  Maximo VAP: %.4f\n', max(abs(eig(hessiano))));
 
 %% FUNCIONES AUXILIARES
 function f = getOutput(funHandle, x)
