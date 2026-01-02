@@ -14,7 +14,6 @@ function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronteras
     ceq = resultados.violacionRestricciones;
     
     % --- 4. RESTRICCIONES DE DESIGUALDAD (c <= 0) ---
-    % Aumentamos el tamaño de c para incluir los ángulos (7 + 3 = 10)
     c = zeros(7, 1);
     
     % A) COMBUSTIBLE

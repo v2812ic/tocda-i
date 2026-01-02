@@ -7,11 +7,12 @@ parametros.distancia = 4e6;
 parametros.PL = 800;
 parametros.seguridadFuel = 1.1; %> 1!!
 
-parametros.xRef = [2.0e5, 3.6e6, 150, 170, 92.5, 1.2e4, 1.2e4, 4.5e3];
 
-
-
-%parametros.xRef = [1e2, 1e2, 0.1, 1, 1, 10, 10, 10];
+%parametros.xRef = [2.0e5, 3.6e6, 150, 170, 92.5, 1.2e4, 1.2e4, 4.5e3];
+parametros.xRef = [1e5, 1e6, 1e2, 1e2, 1e2, 1e4, 1e4, 1e5]; % Escalado
+%intuitivo para llegar a un optimo razonable
+%parametros.xRef = [14142, 1578, 31.62, 5.77, 8.16, 60.37, 471.4, 560.6]; % Escalado hessiana
+%parametros.xRef = [1, 1, 1, 10, 10, 1, 1, 100];
 
 %parametros.xRef = [1, 1, 1, 1, 1, 1, 1, 1];     %Sin escalados
 
@@ -38,3 +39,16 @@ ruta = fullfile('Data/restriccionesGenerales.mat');
 
 
 save(ruta, 'parametros', 'fronteras');
+
+% diag hessiano: 
+% 
+% 1.0e+05 *
+
+    % 0.0005
+    % 4.0174
+    % 0.0001
+    % 0.0030
+    % 0.0015
+    % 0.2744
+    % 0.0045
+    % 0.3182
