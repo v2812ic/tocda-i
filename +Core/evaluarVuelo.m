@@ -14,11 +14,10 @@ function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronteras
     ceq = resultados.violacionRestricciones;
     
     % --- 4. RESTRICCIONES DE DESIGUALDAD (c <= 0) ---
-    % Aumentamos el tamaño de c para incluir los ángulos (7 + 3 = 10)
     c = zeros(7, 1);
     
     % A) COMBUSTIBLE
-    c(1) = resultados.combustibleConsumido - fuelInicial / parametrosFijos.seguridadFuel;
+    c(1) = (resultados.combustibleConsumido - fuelInicial / parametrosFijos.seguridadFuel)/ parametrosFijos.xRef(8);
     
     % B) CÁLCULOS GEOMÉTRICOS (Deltah y Distancias)
     Deltah = [X(6) - parametrosFijos.h_origen;             % Fase 1: Ascenso inicial
@@ -42,4 +41,5 @@ function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronteras
     c(6) = gammas(3) - fronterasFijas.minTasaDescenso;
     c(7) = fronterasFijas.maxTasaDescenso - gammas(3);
 
+    c(2:7) = c(2:7)*10;
 end
