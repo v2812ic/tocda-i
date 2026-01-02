@@ -7,10 +7,10 @@ parametros.distancia = 4e6;
 parametros.PL = 800;
 parametros.seguridadFuel = 1.1; %> 1!!
 
-%parametros.xRef = [1e5, 1e6, 1e2, 1e2, 1e2, 1e4, 1e4, 1e4];
+parametros.xRef = [2.0e5, 3.6e6, 150, 170, 92.5, 1.2e4, 1.2e4, 4.5e3];
 
 
-parametros.xRef = [1e2, 1e2, 0.1, 1, 1, 10, 10, 10];
+%parametros.xRef = [1e2, 1e2, 0.1, 1, 1, 10, 10, 10];
 %parametros.xRef = [1, 1, 1, 1, 1, 1, 1, 1];     %Sin escalados
 
 

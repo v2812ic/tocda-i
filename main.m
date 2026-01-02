@@ -1,3 +1,4 @@
+
 %% 1. CONFIGURACIÓN INICIAL Y CARGA DE DATOS
 import Core.evaluarVuelo
 addpath('Utils');
@@ -96,7 +97,7 @@ for i = 1:length(aviones)
         
         optionsGA = optimoptions('gamultiobj', ...
             'UseParallel', true, ...
-            'Display', 'iter');
+            'Display', 'sqp');
         
         [Xs_ga, F_ga, exitflag_ga, output_ga] = gamultiobj(objFun_s, ...
             control.nvars, A_s, b_s, [], [], lb_s, ub_s, nonlconFun_s, optionsGA);
@@ -154,38 +155,62 @@ for i = 1:length(aviones)
         plotFlight(X_grad, F_grad, avion, parametrosFijos);
         
 
-        %Análisis de sensibilidad de las variables
-        % Análisis de sensibilidad de las variables (alrededor del óptimo)
-        eps = 1e-3;                          % 0.1% relativo
-        dx  = eps * abs(xs_opt);     % evita dx=0
-        
-        Deltaf_plus  = zeros(control.nvars,2);
-        Deltaf_minus = zeros(control.nvars,2);
-        dF_dxs = zeros(control.nvars,2);
-        
-        for i = 1:control.nvars
-            xp = xs_opt; xp(i) = xp(i) + dx(i);
-            xm = xs_opt; xm(i) = xm(i) - dx(i);
-        
-            fp = masterEval(xp .* Xref);   % [s; kg/PL]
-            fm = masterEval(xm .* Xref);   % [s; kg/PL]
-        
-            % pasar combustible a kg para comparar con F_grad(2)
-            fp(2) = fp(2) * parametrosFijos.PL;
-            fm(2) = fm(2) * parametrosFijos.PL;
-        
-            Deltaf_plus(i,:)  = fp(:).' - F_grad(:).';
-            Deltaf_minus(i,:) = fm(:).' - F_grad(:).';
+        % --- Análisis de sensibilidad relativa (alrededor del óptimo) ---
 
-            % Derivada central respecto a xs
-            dF_dxs(i,:) = (Deltaf_plus(i,:) - Deltaf_minus(i,:)) / (2*dx(i));
-        end
-        
-        
-        % Si quieres derivada respecto a X real:
-        dF_dX = dF_dxs ./ Xref(:);
+eps = 1e-3;  % 0.1% relativo
 
-        
+% Asegura perturbación no nula incluso si xs_opt(i)=0
+dx = eps * max(abs(xs_opt), 1);   % en escala normalizada (xs)
+
+F0 = F_grad(:);                   % [tiempo; fuel_total] en tus unidades finales
+F0(2) = F0(2) * parametrosFijos.PL;  % asegúrate de que F0(2) es kg (consistente)
+
+Deltaf_plus  = zeros(control.nvars,2);
+Deltaf_minus = zeros(control.nvars,2);
+dF_dxs       = zeros(control.nvars,2);
+
+% Sensibilidad relativa: S_ij = (∂f_j/∂X_i) * (X_i / f_j)
+
+S_rel = zeros(control.nvars,2);
+
+for i = 1:control.nvars
+    xp = xs_opt;  xp(i) = xs_opt(i) + dx(i);
+    xm = xs_opt;  xm(i) = xs_opt(i) - dx(i);
+
+    fp = masterEval(xp .* Xref);     % [s; kg/PL]
+    fm = masterEval(xm .* Xref);     % [s; kg/PL]
+
+    % pasar combustible a kg (consistente con F0)
+    fp(2) = fp(2) * parametrosFijos.PL;
+    fm(2) = fm(2) * parametrosFijos.PL;
+
+    Deltaf_plus(i,:)  = fp(:).' - F0(:).';
+    Deltaf_minus(i,:) = fm(:).' - F0(:).';
+
+    % Derivada central respecto a xs
+    dF_dxs(i,:) = (Deltaf_plus(i,:) - Deltaf_minus(i,:)) / (2*dx(i));
+
+    % --- Sensibilidad relativa (forma simétrica, robusta) ---
+    % S_rel(i,j) ≈ (f_plus - f_minus) / (2*eps*f0)
+    % NOTA: aquí usamos eps efectivo = dx(i)/max(|xs_opt(i)|,1)
+    eps_eff = dx(i) / max(abs(xs_opt(i)), 1);
+    S_rel(i,:) = (fp(:).' - fm(:).') ./ (2*eps_eff * F0(:).');
+end
+
+% Derivada respecto a X real:
+dF_dX = dF_dxs ./ Xref(:);
+
+% Sensibilidad relativa también puede obtenerse desde dF_dX:
+% S_rel_check(i,j) = dF_dX(i,j) * (X_grad(i)/F0(j));
+S_rel_check = dF_dX .* (X_grad(:) ./ F0(:).');  % (nvars x 2)
+
+% Cálculo del Hessinano
+
+Jfun = @(x) sumaPonderada(x, masterEval, ...
+                          control.w1, control.w2, ...
+                          tiempo_min, tiempo_max, ub);
+
+[Hdiag_xs, J0] = hessDiagCentralScaled(xs_opt, Xref, Jfun, 1e-5);
         tiempo = toc;
         fprintf("   Optimización gradiente completada. Tiempo de ejecución Grad: %.4f s.\n\n", tiempo);
     end
@@ -235,7 +260,7 @@ end
 
 function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub)
     [f, ~, ~] = funHandle(x);
-   J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
-   %J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2);
+   J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/4.5e3;
+   %J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800;
 end
 
