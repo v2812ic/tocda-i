@@ -9,70 +9,73 @@ Restriccion = 0;
 
 %%
 
-params = struct;
+% params = struct;
+% 
+% % Condiciones de vuelo y empuje requerido
+% params.T_0 = 288.15*z;
+% params.P_0 = 101325*d;
+% params.v_0 = estado.V;
+% params.E_obj = T/Avion.nummotores/0.9; %Paso de empuje ins a no-ins
+% 
+% %Datos del avión
+% params.alpha_4 = Avion.alpha_4;
+% params.alpha_45 = Avion.alpha_45;
+% params.BPR = Avion.BPR;
+% params.A_8 = Avion.A_8;
+% params.A_18 = Avion.A_18;
+% %params.k_f = k_f;
+% 
+% %Constantes
+% 
+%     %Poder calorífico queroseno
+%     L = 43e6;
+%     %Constantes del aire
+%     l_c = 1.4; %gamma del aire
+%     params.l_c = l_c;
+%     l_e = 1.33; %gamma del aire caliente
+%     params.l_e = l_e;
+%     params.cp_c = 1004.5;
+%     params.cp_e = 1150; 
+%     params.R = 287;
+% 
+%     params.crit_c = ((l_c+1)/2)^(l_c/(l_c-1));
+%     params.crit_e = ((l_e+1)/2)^(l_e/(l_e-1));
+%     %Rendimientos
+%     n02 = 0.99;
+%     params.n_c = 0.87;
+%     params.n_t = 0.94;
+%     params.pi_34 = 0.97;
+%     params.n_f = 0.9;
+% 
+% 
+% %Datos entrada al motor
+% params.T_0t = params.T_0*(1+(l_c-1)/2*Mach^2);
+% pt0 = params.P_0*(1+(l_c-1)/2*Mach^2)^(l_c/(l_c-1));
+% params.P_0t = n02*pt0;
+% 
+% 
+% opts = optimoptions('fsolve','Display','off');
+% 
+% T4t_0 = 1200;
+% T4t_sol = fsolve( @(T4t) F(T4t,params), T4t_0, opts);
+% 
+% [~,T3t, G_p] = F(T4t_sol,params);
+% 
+% f = (params.cp_e*T4t_sol-params.cp_c*T3t)/(L-params.cp_e*T4t_sol);
+% c = abs(f*G_p);
+% 
+% if c<0 || c>4  %Por si acaso se va de madre
+% 
+%     TSFC= (0.45+ 0.54*Mach) * sqrt(z);
+% 
+%     dmdt = max(0, T*TSFC/3600/9.8);
+% else
+%     dmdt = c*Avion.nummotores;
+% end
 
-% Condiciones de vuelo y empuje requerido
-params.T_0 = 288.15*z;
-params.P_0 = 101325*d;
-params.v_0 = estado.V;
-params.E_obj = T/Avion.nummotores/0.9; %Paso de empuje ins a no-ins
+TSFC= (0.45+ 0.54*Mach) * sqrt(z);
 
-%Datos del avión
-params.alpha_4 = Avion.alpha_4;
-params.alpha_45 = Avion.alpha_45;
-params.BPR = Avion.BPR;
-params.A_8 = Avion.A_8;
-params.A_18 = Avion.A_18;
-%params.k_f = k_f;
-
-%Constantes
-
-    %Poder calorífico queroseno
-    L = 43e6;
-    %Constantes del aire
-    l_c = 1.4; %gamma del aire
-    params.l_c = l_c;
-    l_e = 1.33; %gamma del aire caliente
-    params.l_e = l_e;
-    params.cp_c = 1004.5;
-    params.cp_e = 1150; 
-    params.R = 287;
-
-    params.crit_c = ((l_c+1)/2)^(l_c/(l_c-1));
-    params.crit_e = ((l_e+1)/2)^(l_e/(l_e-1));
-    %Rendimientos
-    n02 = 0.99;
-    params.n_c = 0.87;
-    params.n_t = 0.94;
-    params.pi_34 = 0.97;
-    params.n_f = 0.9;
-
-
-%Datos entrada al motor
-params.T_0t = params.T_0*(1+(l_c-1)/2*Mach^2);
-pt0 = params.P_0*(1+(l_c-1)/2*Mach^2)^(l_c/(l_c-1));
-params.P_0t = n02*pt0;
-
-
-opts = optimoptions('fsolve','Display','off');
-
-T4t_0 = 1200;
-T4t_sol = fsolve( @(T4t) F(T4t,params), T4t_0, opts);
-
-[~,T3t, G_p] = F(T4t_sol,params);
-
-f = (params.cp_e*T4t_sol-params.cp_c*T3t)/(L-params.cp_e*T4t_sol);
-c = abs(f*G_p);
-
-if c<0 || c>4  %Por si acaso se va de madre
-
-    TSFC= (0.45+ 0.54*Mach) * sqrt(z);
-
-    dmdt = max(0, T*TSFC/3600/9.8);
-else
-    dmdt = c*Avion.nummotores;
-end
-
+dmdt = max(0, T*TSFC/3600/9.8);
 
 end
 

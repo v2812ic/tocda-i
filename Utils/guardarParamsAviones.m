@@ -26,10 +26,10 @@ parametros.alpha_45 = alpha_45;
 parametros.A_8 = A_8;
 parametros.A_18 = A_18;
 
-parametros.Tsl = 120e3;
-parametros.TSFCsl = 1e-5;
+%parametros.Tsl = 120e3;
+%parametros.TSFCsl = 1e-5;
 parametros.nummotores = 2;
-parametros.Tmax = 60000;
+%parametros.Tmax = 60000;
 
 
 % Parametros masicos (kg)
@@ -39,6 +39,8 @@ parametros.MTOW = 17622;
 % Restricciones
 fronteras.FWmax = 9000; % (kg)
 fronteras.techoDeVuelo = 13716; % (m)
+%fronteras.techoDeVuelo = 14000;  %Aumento el techo de vuelo para evaluar
+%el efecto sobre el consumo
 fronteras.vMaxCrucero = 245; % todas las velocidades (m/s)   
 fronteras.vMinCrucero = 60;
 fronteras.vMaxDespegue = 245;
