@@ -70,8 +70,13 @@ for i = 1:length(aviones)
     b = zeros(2, 1);
     A(1, 1:2) = -1; b(1) = -(D - fronterasFijas.x3Max);
     A(2, 1:2) =  1; b(2) =  (D - fronterasFijas.x3Min);
-    A_s = A * diag(Xref);
-    b_s = b;
+
+
+    refsEqLin = Xref(2)*ones(2, 1); % Las ecuaciones estas son de orden distancia, luego hay que escalar cada fila tb
+
+    A_s = A * diag(Xref);   % (2 x nvars)
+    b_s = b;                % NO cambia
+
 
     %Escalado de funciones
     % tiempo_min = fronterasFijas.x1Min/(fronterasFijas.vMaxDespegue*cos(fronterasFijas.maxTasaAscenso))...
@@ -120,14 +125,14 @@ for i = 1:length(aviones)
         
 
 
-        x0 = [200000, 3600000, 150, 170, 90, 12000, 12000, 4500]; % Este punto es factible
+        x0 = [200000, 3600000, 150, 170, 90, 12000, 12000, 4000]; % Este punto es factible
 
         xs0 = x0 ./ Xref;
         %Compruebo que x0 no incumple con las límites
         idx_lb = find(x0 < lb);
         idx_ub = find(x0 > ub);
 
-        funcionCosteEscalar_s = @(xs) sumaPonderada(xs .* Xref, masterEval, control.w1, control.w2, tiempo_min, tiempo_max, ub);
+        funcionCosteEscalar_s = @(xs) sumaPonderada(xs .* Xref, masterEval, control.w1, control.w2, tiempo_min, tiempo_max, ub,parametrosFijos);
         nonlconFun_s = @(xs) getConstraints(masterEval, xs .* Xref);
        
         optionsGrad = optimoptions('fmincon', ...
@@ -209,7 +214,7 @@ S_rel_check = dF_dX .* (X_grad(:) ./ F0(:).');  % (nvars x 2)
 
 Jfun = @(x) sumaPonderada(x, masterEval, ...
                           control.w1, control.w2, ...
-                          tiempo_min, tiempo_max, ub);
+                          tiempo_min, tiempo_max, ub, parametrosFijos);
 
 [Hdiag_xs, J0] = hessDiagCentralScaled(xs_opt, Xref, Jfun, 1e-5);
         tiempo = toc;
@@ -259,9 +264,9 @@ function [c, ceq] = getConstraints(funHandle, x)
     [~, c, ceq] = funHandle(x);
 end
 
-function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub)
+function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub, parametrosFijos)
     [f, ~, ~] = funHandle(x);
-   J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/4.5e3;
+   J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * (f(2) * parametrosFijos.PL) / ub(8);
    %J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800;
 end
 
