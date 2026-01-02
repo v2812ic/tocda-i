@@ -39,6 +39,8 @@ parametros.MTOW = 17622;
 % Restricciones
 fronteras.FWmax = 9000; % (kg)
 fronteras.techoDeVuelo = 13716; % (m)
+%fronteras.techoDeVuelo = 14000;  %Aumento el techo de vuelo para evaluar
+%el efecto sobre el consumo
 fronteras.vMaxCrucero = 245; % todas las velocidades (m/s)   
 fronteras.vMinCrucero = 60;
 fronteras.vMaxDespegue = 245;
