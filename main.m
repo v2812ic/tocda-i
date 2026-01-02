@@ -117,7 +117,7 @@ for i = 1:length(aviones)
         tic;
         fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
         
-        x0 = [180000, 3600000, 240, 240, 65, 13000, 13000, 2000];
+        x0 = [60000, 3600000, 240, 150, 65, 13000, 13000, 1000];
         xs0 = x0 ./ Xref;
         %Compruebo que x0 no incumple con las límites
         idx_lb = find(x0 < lb);
@@ -135,7 +135,7 @@ for i = 1:length(aviones)
             'StepTolerance', 1e-8, ...
             'ConstraintTolerance', 1e-8, ...
             'FiniteDifferenceType', 'central', ...
-            'HessianApproximation','bfgs', ...
+            'HessianApproximation','finite-difference', ...
             'Algorithm','sqp');
             
         [xs_opt, J_val, exitflag_grad, output_grad, lambda, grad, hessiano] = fmincon(funcionCosteEscalar_s, ...
@@ -231,7 +231,7 @@ end
 
 function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub)
     [f, ~, ~] = funHandle(x);
-   % J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
    J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
+   %J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2);
 end
 

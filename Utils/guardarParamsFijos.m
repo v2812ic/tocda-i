@@ -9,7 +9,7 @@ parametros.seguridadFuel = 1.1; %> 1!!
 
 %parametros.xRef = [1e5, 1e6, 1e2, 1e2, 1e2, 1e4, 1e4, 1e4];
 
-%parametros.xRef = [1, 1, 10^-5, 10^-5, 10^-6, 10^-6, 1, 10^2];
+%parametros.xRef = [1, 1, 10^-3, 10^-3, 10^-5, 1, 1, 10];
 parametros.xRef = [1, 1, 1, 1, 1, 1, 1, 1];     %Sin escalados
 
 fronteras.maxTasaAscenso = deg2rad(8);     % Angulos máximos de ascenso y descenso(deg)
