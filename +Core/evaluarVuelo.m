@@ -42,5 +42,4 @@ function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronteras
     c(7) = fronterasFijas.maxTasaDescenso - gammas(3);
 
     c(2:7) = c(2:7)*10;
-
 end

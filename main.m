@@ -6,7 +6,7 @@ addpath('Utils');
 % CONTROL DE LA SIMULACIÓN - UNICA SECCIÓN A TOCAR
 
 aviones = ["BC300"]; 
-heuristico = false; 
+heuristico = true; 
 gradiente = true; 
 w1 = 0; % tiempo
 w2 = 1; % combustible 
@@ -70,13 +70,8 @@ for i = 1:length(aviones)
     b = zeros(2, 1);
     A(1, 1:2) = -1; b(1) = -(D - fronterasFijas.x3Max);
     A(2, 1:2) =  1; b(2) =  (D - fronterasFijas.x3Min);
-
-
-    refsEqLin = Xref(2)*ones(2, 1); % Las ecuaciones estas son de orden distancia, luego hay que escalar cada fila tb
-
-    A_s = A * diag(Xref);   % (2 x nvars)
-    b_s = b;                % NO cambia
-
+    A_s = A * diag(Xref);
+    b_s = b;
 
     refsEqLin = Xref(2)*ones(2, 1); % Las ecuaciones estas son de orden distancia, luego hay que escalar cada fila tb
     
@@ -107,7 +102,7 @@ for i = 1:length(aviones)
         
         optionsGA = optimoptions('gamultiobj', ...
             'UseParallel', true, ...
-            'Display', 'sqp');
+            'Display', 'iter');
         
         [Xs_ga, F_ga, exitflag_ga, output_ga] = gamultiobj(objFun_s, ...
             control.nvars, A_s, b_s, [], [], lb_s, ub_s, nonlconFun_s, optionsGA);
@@ -128,17 +123,14 @@ for i = 1:length(aviones)
         tic;
         fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
         
-
-
-        x0 = [140000, 3700000, 170, 150, 150, 10000, 10000, 3500]; % Punto de partida 
-        %x0 = [98262.85, 3788456.85, 180.11, 143.31, 121.98, 12746.29, 13155.48, 3529.62]; % Punto de partida después del reescalado (optimo del punto de partida con reescalado intuitivo)
-
+        %x0 = [140000, 3700000, 170, 150, 150, 10000, 10000, 3500]; % Punto de partida 
+        x0 = [98262.85, 3788456.85, 180.11, 143.31, 121.98, 12746.29, 13155.48, 3529.62]; % Punto de partida después del reescalado (optimo del punto de partida con reescalado intuitivo)
         xs0 = x0 ./ Xref;
         %Compruebo que x0 no incumple con las límites
         idx_lb = find(x0 < lb);
         idx_ub = find(x0 > ub);
 
-        funcionCosteEscalar_s = @(xs) sumaPonderada(xs .* Xref, masterEval, control.w1, control.w2, tiempo_min, tiempo_max, ub,parametrosFijos);
+        funcionCosteEscalar_s = @(xs) sumaPonderada(xs .* Xref, masterEval, control.w1, control.w2, tiempo_min, tiempo_max, ub);
         nonlconFun_s = @(xs) getConstraints(masterEval, xs .* Xref);
        
         optionsGrad = optimoptions('fmincon', ...
@@ -150,7 +142,7 @@ for i = 1:length(aviones)
             'StepTolerance', 1e-4, ...
             'ConstraintTolerance', 1e-4, ...
             'FiniteDifferenceType', 'central', ...
-            'Algorithm','interior-point');
+            'Algorithm','sqp');
            
         [xs_opt, J_val, exitflag_grad, output_grad, lambda, grad, hessiano] = fmincon(funcionCosteEscalar_s, ...
             xs0, A_s, b_s, [], [], lb_s, ub_s, nonlconFun_s, optionsGrad);
@@ -167,62 +159,38 @@ for i = 1:length(aviones)
         plotFlight(X_grad, F_grad, avion, parametrosFijos);
         
 
-        % --- Análisis de sensibilidad relativa (alrededor del óptimo) ---
+        %Análisis de sensibilidad de las variables
+        % Análisis de sensibilidad de las variables (alrededor del óptimo)
+        eps = 1e-3;                          % 0.1% relativo
+        dx  = eps * abs(xs_opt);     % evita dx=0
+        
+        Deltaf_plus  = zeros(control.nvars,2);
+        Deltaf_minus = zeros(control.nvars,2);
+        dF_dxs = zeros(control.nvars,2);
+        
+        for i = 1:control.nvars
+            xp = xs_opt; xp(i) = xp(i) + dx(i);
+            xm = xs_opt; xm(i) = xm(i) - dx(i);
+        
+            fp = masterEval(xp .* Xref);   % [s; kg/PL]
+            fm = masterEval(xm .* Xref);   % [s; kg/PL]
+        
+            % pasar combustible a kg para comparar con F_grad(2)
+            fp(2) = fp(2) * parametrosFijos.PL;
+            fm(2) = fm(2) * parametrosFijos.PL;
+        
+            Deltaf_plus(i,:)  = fp(:).' - F_grad(:).';
+            Deltaf_minus(i,:) = fm(:).' - F_grad(:).';
 
-eps = 1e-3;  % 0.1% relativo
+            % Derivada central respecto a xs
+            dF_dxs(i,:) = (Deltaf_plus(i,:) - Deltaf_minus(i,:)) / (2*dx(i));
+        end
+        
+        
+        % Si quieres derivada respecto a X real:
+        dF_dX = dF_dxs ./ Xref(:);
 
-% Asegura perturbación no nula incluso si xs_opt(i)=0
-dx = eps * max(abs(xs_opt), 1);   % en escala normalizada (xs)
-
-F0 = F_grad(:);                   % [tiempo; fuel_total] en tus unidades finales
-F0(2) = F0(2) * parametrosFijos.PL;  % asegúrate de que F0(2) es kg (consistente)
-
-Deltaf_plus  = zeros(control.nvars,2);
-Deltaf_minus = zeros(control.nvars,2);
-dF_dxs       = zeros(control.nvars,2);
-
-% Sensibilidad relativa: S_ij = (∂f_j/∂X_i) * (X_i / f_j)
-
-S_rel = zeros(control.nvars,2);
-
-for i = 1:control.nvars
-    xp = xs_opt;  xp(i) = xs_opt(i) + dx(i);
-    xm = xs_opt;  xm(i) = xs_opt(i) - dx(i);
-
-    fp = masterEval(xp .* Xref);     % [s; kg/PL]
-    fm = masterEval(xm .* Xref);     % [s; kg/PL]
-
-    % pasar combustible a kg (consistente con F0)
-    fp(2) = fp(2) * parametrosFijos.PL;
-    fm(2) = fm(2) * parametrosFijos.PL;
-
-    Deltaf_plus(i,:)  = fp(:).' - F0(:).';
-    Deltaf_minus(i,:) = fm(:).' - F0(:).';
-
-    % Derivada central respecto a xs
-    dF_dxs(i,:) = (Deltaf_plus(i,:) - Deltaf_minus(i,:)) / (2*dx(i));
-
-    % --- Sensibilidad relativa (forma simétrica, robusta) ---
-    % S_rel(i,j) ≈ (f_plus - f_minus) / (2*eps*f0)
-    % NOTA: aquí usamos eps efectivo = dx(i)/max(|xs_opt(i)|,1)
-    eps_eff = dx(i) / max(abs(xs_opt(i)), 1);
-    S_rel(i,:) = (fp(:).' - fm(:).') ./ (2*eps_eff * F0(:).');
-end
-
-% Derivada respecto a X real:
-dF_dX = dF_dxs ./ Xref(:);
-
-% Sensibilidad relativa también puede obtenerse desde dF_dX:
-% S_rel_check(i,j) = dF_dX(i,j) * (X_grad(i)/F0(j));
-S_rel_check = dF_dX .* (X_grad(:) ./ F0(:).');  % (nvars x 2)
-
-% Cálculo del Hessinano
-
-Jfun = @(x) sumaPonderada(x, masterEval, ...
-                          control.w1, control.w2, ...
-                          tiempo_min, tiempo_max, ub, parametrosFijos);
-
-[Hdiag_xs, J0] = hessDiagCentralScaled(xs_opt, Xref, Jfun, 1e-5);
+        
         tiempo = toc;
         fprintf("   Optimización gradiente completada. Tiempo de ejecución Grad: %.4f s.\n\n", tiempo);
     end
@@ -270,9 +238,8 @@ function [c, ceq] = getConstraints(funHandle, x)
     [~, c, ceq] = funHandle(x);
 end
 
-function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub, parametrosFijos)
+function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub)
     [f, ~, ~] = funHandle(x);
-   J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * (f(2) * parametrosFijos.PL) / ub(8);
-   %J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800;
+   % J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
+   J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
 end
-
