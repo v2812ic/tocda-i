@@ -11,6 +11,7 @@ function x0 = DoE(lb, ub, avion, parametrosFijos, fronterasFijas)
 
     factores = 8;
     experimentos = 100;
+    rng(1);
     X_lhs = lhsdesign(experimentos, factores);
 
     X = lb + X_lhs .* (ub - lb);
@@ -31,6 +32,7 @@ function x0 = DoE(lb, ub, avion, parametrosFijos, fronterasFijas)
 
 
 end
+
 
 
 
