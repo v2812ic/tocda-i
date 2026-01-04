@@ -7,9 +7,11 @@ parametros.distancia = 4e6;
 parametros.PL = 800;
 parametros.seguridadFuel = 1.1; %> 1!!
 
-%parametros.xRef = [1e5, 1e6, 1e2, 1e2, 1e2, 1e4, 1e4, 1e5]; % Escalado
-%intuitivo para llegar a un optimo razonable
-% parametros.xRef = [14142, 1578, 31.62, 5.77, 8.16, 60.37, 471.4, 560.6]; % Escalado hessiana
+
+parametros.xRef = [0.6126e5, 1.6964e5, 56, 22, 112, 4947, 9969, 348]; % Escalado
+%intuitivo para llegar a un optimo razonabl
+%parametros.xRef = [14142, 1578, 31.62, 5.77, 8.16, 60.37, 471.4, 560.6]; % Escalado hessiana
+
 %parametros.xRef = [1, 1, 1, 10, 10, 1, 1, 100];
 %parametros.xRef = [1, 1, 1, 1, 1, 1, 1, 1];     %Sin escalados
 parametros.xRef = abs(Xref_nuevo');
