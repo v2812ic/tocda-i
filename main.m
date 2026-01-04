@@ -121,9 +121,13 @@ for i = 1:length(aviones)
         tic;
         fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
         
+         
+        %x0 = X_grad;  %Esto es para la parte de la hessiana
+
         %x0 = [200000, 3600000, 150, 170, 90, 12000, 12000, 5000]; % Punto de partida 
-        x0 = X_grad;
-        %x0 = [98262.85, 3788456.85, 180.11, 143.31, 121.98, 12746.29, 13155.48, 3529.62]; % Punto de partida después del reescalado (optimo del punto de partida con reescalado intuitivo)
+        %x0 = DoE(lb,ub, avion, parametrosFijos,fronterasFijas); %Punto de partida obtenido de DoE
+        x0 = [98262.85, 3788456.85, 180.11, 143.31, 121.98, 12746.29, 13155.48, 3529.62]; % Punto de partida después del reescalado (optimo del punto de partida con reescalado intuitivo)
+
         xs0 = x0 ./ Xref;
         x0 = [1.5e5; 3.94e5; 127.7; 155.4; 130.2; 9.53e3; 1.06e4; 5.43e3];
         %Compruebo que x0 no incumple con las límites
@@ -244,3 +248,7 @@ function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub)
    % J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
    J = w1 * f(1) + w2 * f(2);
 end
+
+
+
+
