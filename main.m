@@ -244,9 +244,9 @@ end
 
 function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub)
     [f, ~, ~] = funHandle(x);
+    J = w1 * f(1)/tiempo_max + w2 * f(2)*800/ub(8);
    % J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
-   % J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
-   J = w1 * f(1) + w2 * f(2);
+   % J = w1 * f(1) + w2 * f(2);
 end
 
 
