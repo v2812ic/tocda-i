@@ -10,7 +10,7 @@ heuristico = false;
 gradiente = true; 
 w1 = 0; % tiempo
 w2 = 1; % combustible 
-precisionRelEDO = 1e-5;
+precisionRelEDO = 1e-6;
 
 restriccionesGenerales = load("Data/restriccionesGenerales.mat");
 parametrosFijos = restriccionesGenerales.parametros;
@@ -142,11 +142,12 @@ for i = 1:length(aviones)
             'UseParallel', true, ...
             'MaxFunctionEvaluations', Inf, ...
             'MaxIterations', Inf, ...
-            'OptimalityTolerance', 1e-4, ...
-            'StepTolerance', 1e-4, ...
-            'ConstraintTolerance', 1e-4, ...
-            'FiniteDifferenceType', 'central', ...
+            'OptimalityTolerance', 1e-5, ...
+            'StepTolerance', 1e-5, ...
+            'ConstraintTolerance', 1e-5, ...
             'Algorithm','sqp');
+            %'FiniteDifferenceType', 'central', ...
+            
            
         [xs_opt, J_val, exitflag_grad, output_grad, lambda, grad, hessiano] = fmincon(funcionCosteEscalar_s, ...
             xs0, A_s, b_s, [], [], lb_s, ub_s, nonlconFun_s, optionsGrad);
@@ -217,6 +218,7 @@ if control.gradiente
     fprintf('------------------------------------------------------\n');
     fprintf('  COSTO TOTAL (J = w1*f1 + w2*f2): %.6f\n', J_val);
     fprintf('  OBJETIVOS [f1, f2]:              [%.4f,  %.4f]\n', F_grad(1), F_grad(2));
+    fprintf('  OBJETIVOS ESCALADOS [f1, f2]:              [%.4f,  %.4f]\n', F_grad(1)/tiempo_max, F_grad(2)/ub(8));
     fprintf('------------------------------------------------------\n');
     fprintf('  VARIABLES DE DISEÑO (X):\n');
     fprintf('    x1-x4:  %.4f  %.4f  %.4f  %.4f\n', X_grad(1:4));
@@ -245,7 +247,7 @@ end
 function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub)
     [f, ~, ~] = funHandle(x);
     J = w1 * f(1)/tiempo_max + w2 * f(2)*800/ub(8);
-   % J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
+    %J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
    % J = w1 * f(1) + w2 * f(2);
 end
 
