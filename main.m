@@ -6,7 +6,7 @@ addpath('Utils');
 % CONTROL DE LA SIMULACIÓN - UNICA SECCIÓN A TOCAR
 
 aviones = ["BC300"]; 
-heuristico = true; 
+heuristico = false; 
 gradiente = true; 
 w1 = 0; % tiempo
 w2 = 1; % combustible 
@@ -86,8 +86,6 @@ for i = 1:length(aviones)
     %     cos(fronterasFijas.angulo_min);
     tiempo_min = parametrosFijos.distancia/245;
     tiempo_max = parametrosFijos.distancia/60;
-
-    
     
     fprintf("Carga de datos completada, comienza la optimización.\n")
 
@@ -117,15 +115,17 @@ for i = 1:length(aviones)
         tiempo = toc;
         fprintf("   Optimización heurística completada. Tiempo de ejecución GA: %.4f s.\n\n", tiempo);
     end
-    
+    Xref_nuevo = 1./sqrt(diag(hessiano));
     %% 5. OPTIMIZACIÓN POR GRADIENTE (FMINCON)
     if control.gradiente
         tic;
         fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
         
-        %x0 = [140000, 3700000, 170, 150, 150, 10000, 10000, 3500]; % Punto de partida 
-        x0 = [98262.85, 3788456.85, 180.11, 143.31, 121.98, 12746.29, 13155.48, 3529.62]; % Punto de partida después del reescalado (optimo del punto de partida con reescalado intuitivo)
+        %x0 = [200000, 3600000, 150, 170, 90, 12000, 12000, 5000]; % Punto de partida 
+        x0 = X_grad;
+        %x0 = [98262.85, 3788456.85, 180.11, 143.31, 121.98, 12746.29, 13155.48, 3529.62]; % Punto de partida después del reescalado (optimo del punto de partida con reescalado intuitivo)
         xs0 = x0 ./ Xref;
+        x0 = [1.5e5; 3.94e5; 127.7; 155.4; 130.2; 9.53e3; 1.06e4; 5.43e3];
         %Compruebo que x0 no incumple con las límites
         idx_lb = find(x0 < lb);
         idx_ub = find(x0 > ub);
@@ -190,7 +190,7 @@ for i = 1:length(aviones)
         % Si quieres derivada respecto a X real:
         dF_dX = dF_dxs ./ Xref(:);
 
-        
+        Xref_nuevo = 1./sqrt(diag(hessiano));
         tiempo = toc;
         fprintf("   Optimización gradiente completada. Tiempo de ejecución Grad: %.4f s.\n\n", tiempo);
     end
@@ -241,5 +241,6 @@ end
 function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub)
     [f, ~, ~] = funHandle(x);
    % J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
-   J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
+   % J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
+   J = w1 * f(1) + w2 * f(2);
 end
