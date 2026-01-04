@@ -111,7 +111,7 @@ for i = 1:length(aviones)
         Resultados.(avionActual).ga.F = F_ga;
         Resultados.(avionActual).ga.output = output_ga;
         
-        if exist('plotPareto','file'), plotPareto(F_ga, avionActual); end
+        % if exist('plotPareto','file'), plotPareto(F_ga, avionActual); end
         
         tiempo = toc;
         fprintf("   Optimización heurística completada. Tiempo de ejecución GA: %.4f s.\n\n", tiempo);
@@ -122,8 +122,8 @@ for i = 1:length(aviones)
         tic;
         fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
         
-        %x0 = [140000, 3700000, 170, 150, 150, 10000, 10000, 3500]; % Punto de partida 
-        x0 = [98262.85, 3788456.85, 180.11, 143.31, 121.98, 12746.29, 13155.48, 3529.62]; % Punto de partida después del reescalado (optimo del punto de partida con reescalado intuitivo)
+        x0 = [197345, 3681828, 120, 150, 95.5, 13695, 13716, 3442]; % Punto de partida 
+        %x0 = [98262.85, 3788456.85, 180.11, 143.31, 121.98, 12746.29, 13155.48, 3529.62]; % Punto de partida después del reescalado (optimo del punto de partida con reescalado intuitivo)
         xs0 = x0 ./ Xref;
         %Compruebo que x0 no incumple con las límites
         idx_lb = find(x0 < lb);
@@ -141,7 +141,7 @@ for i = 1:length(aviones)
             'StepTolerance', 1e-4, ...
             'ConstraintTolerance', 1e-4, ...
             'FiniteDifferenceType', 'central', ...
-            'Algorithm','interior-point');
+            'Algorithm','sqp');
            
         [xs_opt, J_val, exitflag_grad, output_grad, lambda, grad, hessiano] = fmincon(funcionCosteEscalar_s, ...
             xs0, A_s, b_s, [], [], lb_s, ub_s, nonlconFun_s, optionsGrad);
@@ -230,8 +230,9 @@ fprintf('  Maximo VAP: %.4f\n', max(abs(eig(hessiano))));
 
 %% FUNCIONES AUXILIARES
 function f = getOutput(funHandle, x)
-    [f, ~, ~] = funHandle(x);
+    [f, ~, ~] = funHandle(x);  
 end
+
 
 function [c, ceq] = getConstraints(funHandle, x)
     [~, c, ceq] = funHandle(x);
@@ -240,6 +241,7 @@ end
 function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub)
     [f, ~, ~] = funHandle(x);
    % J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
-   J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
+    J = w1 * f(1)-tiempo_min/tiempo_max + w2 * f(2)*800/ub(8);
+   %J = w1 * f(1) + w2 * f(2); % para el problema sin escalar
 end
 
