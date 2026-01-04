@@ -17,6 +17,8 @@ function [objetivos, c, ceq] = evaluarVuelo(X, Avion, parametrosFijos, fronteras
     c = zeros(7, 1);
     
     % A) COMBUSTIBLE
+    %c(1) = (resultados.combustibleConsumido - fuelInicial / parametrosFijos.seguridadFuel)/ parametrosFijos.xRef(8);
+
     c(1) = (resultados.combustibleConsumido - fuelInicial / parametrosFijos.seguridadFuel)/ parametrosFijos.xRef(8);
     
     % B) CÁLCULOS GEOMÉTRICOS (Deltah y Distancias)
