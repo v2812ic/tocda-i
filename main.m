@@ -123,6 +123,7 @@ for i = 1:length(aviones)
         fprintf("Comienza la optimización por algoritmo basado en gradiente.\n");
         
         %x0 = [140000, 3700000, 170, 150, 150, 10000, 10000, 3500]; % Punto de partida 
+        %x0 = DoE(lb,ub, avion, parametrosFijos,fronterasFijas); %Punto de partida obtenido de DoE
         x0 = [98262.85, 3788456.85, 180.11, 143.31, 121.98, 12746.29, 13155.48, 3529.62]; % Punto de partida después del reescalado (optimo del punto de partida con reescalado intuitivo)
         xs0 = x0 ./ Xref;
         %Compruebo que x0 no incumple con las límites
@@ -242,4 +243,5 @@ function J = sumaPonderada(x, funHandle, w1, w2, tiempo_min, tiempo_max, ub)
    % J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
    J = w1 * (f(1)-tiempo_min)/(tiempo_max-tiempo_min) + w2 * f(2)*800/ub(8);
 end
+
 
